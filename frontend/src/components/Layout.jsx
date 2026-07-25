@@ -78,7 +78,7 @@ const Layout = ({ children }) => {
         <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
           <div>
             <h1 className="text-lg font-bold text-primary-700">NutriCounsel</h1>
-            <p className="text-xs text-gray-500 mt-0.5">{isAdmin ? 'Admin Panel' : 'Client Portal'}</p>
+            <p className="text-xs text-gray-500 mt-0.5">{isAdmin ? 'Admin Panel' : 'My Panel'}</p>
           </div>
           {!isAdmin && (
             <NavLink to="/shop/cart" className="relative p-2 rounded-lg hover:bg-gray-50 text-gray-600" aria-label="Cart">

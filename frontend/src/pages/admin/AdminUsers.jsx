@@ -88,7 +88,12 @@ const AdminUsers = () => {
         {loading ? (
           <p className="p-5 text-sm text-gray-500">Loading users...</p>
         ) : (
-          <table className="w-full text-sm">
+
+
+
+
+          
+          <table className="min-w-[900px] w-full text-sm">
             <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
               <tr>
                 <th className="text-left px-4 py-3">Name</th>
@@ -112,7 +117,7 @@ const AdminUsers = () => {
                   <td className="px-4 py-3 text-gray-600">{u.bmi} ({u.bmiCategory})</td>
                   <td className="px-4 py-3 text-gray-600">{new Date(u.registrationDate).toLocaleDateString()}</td>
                   <td className="px-4 py-3">
-                    <div className="flex gap-2">
+                    <div className="flex items-center gap-2">
                       <button onClick={() => viewUser(u._id)} className="p-1.5 rounded hover:bg-gray-100 text-gray-600">
                         <Eye size={16} />
                       </button>
@@ -130,7 +135,7 @@ const AdminUsers = () => {
 
       {selected && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4" onClick={() => setSelected(null)}>
-          <div className="bg-white rounded-xl max-w-lg w-full p-6 max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-white rounded-xl max-w-lg w-full p-4 sm:p-6 max-h-[85vh] overflow-y-auto">
             <div className="flex justify-between items-start mb-4">
               <h2 className="text-lg font-bold text-gray-800">{selected.fullName}</h2>
               <div className="flex items-center gap-3">
@@ -142,7 +147,7 @@ const AdminUsers = () => {
             </div>
 
             {!editMode ? (
-              <div className="grid grid-cols-2 gap-3 text-sm">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                 <Detail label="Email" value={selected.email} />
                 <Detail label="Phone" value={selected.phone} />
                 <Detail label="Sex" value={selected.sex} />
@@ -162,7 +167,7 @@ const AdminUsers = () => {
               </div>
             ) : (
               <div className="space-y-3">
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <EditField label="Full Name" value={editForm.fullName} onChange={(v) => setEditForm({ ...editForm, fullName: v })} />
                   <EditField label="Phone" value={editForm.phone} onChange={(v) => setEditForm({ ...editForm, phone: v })} />
                   <EditField label="Occupation" value={editForm.occupation} onChange={(v) => setEditForm({ ...editForm, occupation: v })} />
@@ -171,7 +176,7 @@ const AdminUsers = () => {
                   <EditField label="Height (cm)" type="number" value={editForm.height} onChange={(v) => setEditForm({ ...editForm, height: v })} />
                   <EditField label="Weight (kg)" type="number" value={editForm.weight} onChange={(v) => setEditForm({ ...editForm, weight: v })} />
                 </div>
-                <div className="flex gap-3 pt-2">
+                <div className="flex flex-col sm:flex-row gap-3 pt-2">
                   <button onClick={saveEdit} disabled={saving} className="btn-primary">{saving ? 'Saving...' : 'Save Changes'}</button>
                   <button onClick={() => { setEditMode(false); setEditForm(selected); }} className="btn-secondary">Cancel</button>
                 </div>
