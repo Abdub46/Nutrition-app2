@@ -25,6 +25,7 @@ const wishlistRoutes = require('./routes/wishlistRoutes');
 const couponRoutes = require('./routes/couponRoutes');
 const shopAdminRoutes = require('./routes/shopAdminRoutes');
 const newsletterRoutes = require('./routes/newsletterRoutes');
+const bannerRoutes = require('./routes/bannerRoutes');
 
 connectDB();
 
@@ -70,6 +71,7 @@ app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/coupons', couponRoutes);
 app.use('/api/shop-admin', shopAdminRoutes);
 app.use('/api/newsletter', newsletterRoutes);
+app.use('/api/banner', bannerRoutes);
 
 // 404 + error handler (must be last)
 app.use(notFound);
