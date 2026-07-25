@@ -84,7 +84,10 @@ const AdminUsers = () => {
         <p className="text-sm text-gray-500">{users.length} registered client(s)</p>
       </div>
 
-      <div className="card overflow-x-auto !p-0">
+
+
+
+      <div className="hidden md:block card overflow-x-auto !p-0">
         {loading ? (
           <p className="p-5 text-sm text-gray-500">Loading users...</p>
         ) : (
@@ -125,6 +128,7 @@ const AdminUsers = () => {
                         <Trash2 size={16} />
                       </button>
                     </div>
+
                   </td>
                 </tr>
               ))}
@@ -132,6 +136,84 @@ const AdminUsers = () => {
           </table>
         )}
       </div>
+
+
+
+
+      <div className="md:hidden space-y-4">
+  {loading ? (
+    <p className="text-sm text-gray-500">Loading users...</p>
+  ) : (
+    users.map((u) => (
+      <div
+        key={u._id}
+        className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm"
+      >
+        <div className="mb-3">
+          <h3 className="font-semibold text-gray-800">
+            {u.fullName}
+          </h3>
+
+          <p className="text-sm text-gray-500">
+            {u.email}
+          </p>
+        </div>
+
+        <div className="space-y-2 text-sm">
+
+          <p>
+            <strong>Phone:</strong> {u.phone}
+          </p>
+
+          <p>
+            <strong>County:</strong> {u.county}
+          </p>
+
+          <p>
+            <strong>Occupation:</strong> {u.occupation}
+          </p>
+
+          <p>
+            <strong>BMI:</strong> {u.bmi} ({u.bmiCategory})
+          </p>
+
+          <p>
+            <strong>Registered:</strong>{" "}
+            {new Date(u.registrationDate).toLocaleDateString()}
+          </p>
+
+        </div>
+
+        <div className="flex gap-3 mt-4">
+
+          <button
+            onClick={() => viewUser(u._id)}
+            className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg bg-primary-600 text-white"
+          >
+            <Eye size={16} />
+            View
+          </button>
+
+          <button
+            onClick={() => deleteUser(u._id)}
+            className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg bg-red-600 text-white"
+          >
+            <Trash2 size={16} />
+            Delete
+          </button>
+
+        </div>
+      </div>
+    ))
+  )}
+</div>
+
+
+
+
+
+
+
 
       {selected && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4" onClick={() => setSelected(null)}>
