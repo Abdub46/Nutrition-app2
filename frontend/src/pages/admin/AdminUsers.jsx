@@ -150,6 +150,10 @@ const AdminUsers = () => {
         className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm"
       >
         <div className="mb-3">
+
+
+
+          
           <h3 className="font-semibold text-gray-800">
             {u.fullName}
           </h3>
@@ -161,26 +165,6 @@ const AdminUsers = () => {
 
         <div className="space-y-2 text-sm">
 
-          <p>
-            <strong>Phone:</strong> {u.phone}
-          </p>
-
-          <p>
-            <strong>County:</strong> {u.county}
-          </p>
-
-          <p>
-            <strong>Occupation:</strong> {u.occupation}
-          </p>
-
-          <p>
-            <strong>BMI:</strong> {u.bmi} ({u.bmiCategory})
-          </p>
-
-          <p>
-            <strong>Registered:</strong>{" "}
-            {new Date(u.registrationDate).toLocaleDateString()}
-          </p>
 
         </div>
 
