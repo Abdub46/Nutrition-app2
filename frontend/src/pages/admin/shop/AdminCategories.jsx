@@ -107,10 +107,12 @@ const AdminCategories = () => {
                 <label className="label-text">Description</label>
                 <textarea className="input-field" rows={2} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
               </div>
-              <div>
-                <label className="label-text">Image</label>
-                <input type="file" accept="image/*" className="input-field" onChange={(e) => setImageFile(e.target.files[0])} />
-              </div>
+
+
+
+              
+
+
               <button type="submit" disabled={saving} className="btn-primary w-full">{saving ? 'Saving...' : 'Save Category'}</button>
             </form>
           </div>
