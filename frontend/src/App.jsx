@@ -6,6 +6,7 @@ import { useAuth } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
 import Layout from './components/Layout';
+import TopBanner from './components/TopBanner';
 
 import Login from './pages/Login';
 import Signup from './pages/Signup';
@@ -39,6 +40,7 @@ import AdminCategories from './pages/admin/shop/AdminCategories';
 import AdminBrands from './pages/admin/shop/AdminBrands';
 import AdminOrders from './pages/admin/shop/AdminOrders';
 import AdminReviews from './pages/admin/shop/AdminReviews';
+import AdminBanner from './pages/admin/AdminBanner';
 
 const withLayout = (Component) => (
   <Layout>
@@ -51,7 +53,8 @@ function App() {
 
   return (
     <>
-      <Toaster position="top-right" toastOptions={{ duration: 3500 }} />
+      <TopBanner />
+<Toaster position="top-right" toastOptions={{ duration: 3500 }} />
       <Routes>
         <Route
           path="/login"
@@ -87,6 +90,7 @@ function App() {
         <Route path="/admin/users" element={<AdminRoute>{withLayout(AdminUsers)}</AdminRoute>} />
         <Route path="/admin/appointments" element={<AdminRoute>{withLayout(AdminAppointments)}</AdminRoute>} />
         <Route path="/admin/articles" element={<AdminRoute>{withLayout(AdminArticles)}</AdminRoute>} />
+        <Route path="/admin/banner" element={<AdminRoute>{withLayout(AdminBanner)}</AdminRoute>} />
 
         {/* Admin: Shop Management */}
         <Route path="/admin/shop" element={<AdminRoute>{withLayout(AdminShopDashboard)}</AdminRoute>} />

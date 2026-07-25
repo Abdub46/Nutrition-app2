@@ -16,11 +16,15 @@ import {
   Tags,
   Award,
   Star,
+  Megaphone,
+
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
+import { useBanner } from '../context/BannerContext';
 import Footer from './Footer';
 import Newsletter from './Newsletter';
+
 
 const clientLinks = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -36,6 +40,7 @@ const adminLinks = [
   { to: '/admin/users', label: 'Users', icon: LayoutDashboard },
   { to: '/admin/appointments', label: 'Appointments', icon: CalendarDays },
   { to: '/admin/articles', label: 'Articles', icon: Newspaper },
+  { to: '/admin/banner', label: 'Site Banner', icon: Megaphone },
 ];
 
 const shopManagementLinks = [
@@ -50,12 +55,14 @@ const shopManagementLinks = [
 const Layout = ({ children }) => {
   const { user, logout } = useAuth();
   const { itemCount } = useCart();
+  const { visible: bannerVisible } = useBanner();
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const links = user?.role === 'admin' ? adminLinks : clientLinks;
   const bottomNavLinks = links.slice(0, 5);
   const isAdmin = user?.role === 'admin';
+  const bannerOffsetClass = bannerVisible ? 'top-10' : 'top-0';
 
   const handleLogout = () => {
     logout();
@@ -64,8 +71,10 @@ const Layout = ({ children }) => {
 
   return (
     <div className="min-h-screen flex bg-gray-50">
+
+
       {/* Desktop Sidebar */}
-      <aside className="hidden md:flex md:flex-col w-64 bg-white border-r border-gray-100 fixed h-full">
+      <aside className={`hidden md:flex md:flex-col w-64 bg-white border-r border-gray-100 fixed h-full ${bannerOffsetClass}`}>
         <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
           <div>
             <h1 className="text-lg font-bold text-primary-700">NutriCounsel</h1>
@@ -131,7 +140,7 @@ const Layout = ({ children }) => {
       </aside>
 
       {/* Mobile top bar */}
-      <div className="md:hidden fixed top-0 left-0 right-0 z-30 bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between">
+      <div className={`md:hidden fixed left-0 right-0 z-30 bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between ${bannerOffsetClass}`}>
         <h1 className="text-base font-bold text-primary-700">NutriCounsel</h1>
         <div className="flex items-center gap-1">
           {!isAdmin && (
@@ -214,7 +223,7 @@ const Layout = ({ children }) => {
       )}
 
       {/* Main content */}
-      <main className="flex-1 md:ml-64 pt-16 md:pt-6 pb-20 md:pb-6 px-4 md:px-8 flex flex-col">
+      <main className={`flex-1 md:ml-64 ${bannerVisible ? 'pt-[104px] md:pt-16' : 'pt-16 md:pt-6'} pb-20 md:pb-6 px-4 md:px-8 flex flex-col`}>
         <div className="max-w-6xl mx-auto w-full flex-1">{children}</div>
         <Newsletter />
         <Footer />
