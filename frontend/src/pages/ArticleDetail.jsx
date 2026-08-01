@@ -27,7 +27,7 @@ const ArticleDetail = () => {
       </Link>
 
       {article.featuredImage && (
-        <img src={article.featuredImage} alt={article.title} className="w-full h-64 object-cover rounded-xl" />
+        <img src={article.featuredImage} alt={article.title} fetchpriority="high" decoding="async" className="w-full h-64 object-cover rounded-xl" />
       )}
 
       <div>

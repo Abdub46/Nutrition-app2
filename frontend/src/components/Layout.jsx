@@ -16,7 +16,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { useBanner } from '../context/BannerContext';
 import Footer from './Footer';
-import Newsletter from './Newsletter';
+import BackButton from './BackButton';
 
 const clientLinks = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -53,11 +53,14 @@ const Layout = ({ children }) => {
 
   return (
     <div className="min-h-screen flex bg-gray-50">
-      {/* Desktop Sidebar */}
-      <aside className={`hidden md:flex md:flex-col w-64 bg-white border-r border-gray-100 fixed h-full ${bannerOffsetClass}`}>
-        <div className="px-6 py-5 border-b border-gray-100">
-          <h1 className="text-lg font-bold text-primary-700">NutriCounsel</h1>
-          <p className="text-xs text-gray-500 mt-0.5">{isAdmin ? 'Admin Panel' : 'Client Portal'}</p>
+      {/* Desktop Sidebar - glassmorphism: translucent + backdrop blur, sticky via fixed positioning */}
+      <aside className={`hidden md:flex md:flex-col w-64 bg-white/70 backdrop-blur-xl border-r border-white/60 fixed h-full ${bannerOffsetClass}`}>
+        <div className="px-6 py-5 border-b border-white/60 flex items-center gap-2">
+          <BackButton />
+          <div>
+            <h1 className="text-lg font-bold text-primary-700">NutriCounsel</h1>
+            <p className="text-xs text-gray-500 mt-0.5">{isAdmin ? 'Admin Panel' : 'Client Portal'}</p>
+          </div>
         </div>
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
           {links.map(({ to, label, icon: Icon }) => (
@@ -76,7 +79,7 @@ const Layout = ({ children }) => {
             </NavLink>
           ))}
         </nav>
-        <div className="p-3 border-t border-gray-100">
+        <div className="p-3 border-t border-white/60">
           <button
             onClick={handleLogout}
             className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 w-full"
@@ -86,9 +89,12 @@ const Layout = ({ children }) => {
         </div>
       </aside>
 
-      {/* Mobile top bar */}
-      <div className={`md:hidden fixed left-0 right-0 z-30 bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between ${bannerOffsetClass}`}>
-        <h1 className="text-base font-bold text-primary-700">NutriCounsel</h1>
+      {/* Mobile top bar - glassmorphism, transparent + sticky (fixed) */}
+      <div className={`md:hidden fixed left-0 right-0 z-30 bg-white/70 backdrop-blur-xl border-b border-white/60 px-4 py-3 flex items-center justify-between ${bannerOffsetClass}`}>
+        <div className="flex items-center gap-2">
+          <BackButton />
+          <h1 className="text-base font-bold text-primary-700">NutriCounsel</h1>
+        </div>
         <button onClick={() => setMobileOpen(true)} className="p-2">
           <Menu size={22} />
         </button>
@@ -98,7 +104,7 @@ const Layout = ({ children }) => {
       {mobileOpen && (
         <div className="md:hidden fixed inset-0 z-40 bg-black/40" onClick={() => setMobileOpen(false)}>
           <div
-            className="bg-white w-64 h-full p-4 flex flex-col"
+            className="bg-white/90 backdrop-blur-xl w-64 h-full p-4 flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-4">
@@ -138,12 +144,11 @@ const Layout = ({ children }) => {
       {/* Main content */}
       <main className={`flex-1 md:ml-64 ${bannerVisible ? 'pt-[104px] md:pt-16' : 'pt-16 md:pt-6'} pb-20 md:pb-6 px-4 md:px-8 flex flex-col`}>
         <div className="max-w-6xl mx-auto w-full flex-1">{children}</div>
-        <Newsletter />
         <Footer />
       </main>
 
-      {/* Mobile bottom nav */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-gray-100 flex justify-around py-2">
+      {/* Mobile bottom nav - glassmorphism */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-white/70 backdrop-blur-xl border-t border-white/60 flex justify-around py-2">
         {bottomNavLinks.map(({ to, label, icon: Icon }) => (
           <NavLink
             key={to}

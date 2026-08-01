@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Facebook, Instagram, Twitter, Mail, Phone, MapPin, ArrowUp, Leaf } from 'lucide-react';
+import { Facebook, Instagram, Twitter, Mail, Phone, MapPin, ArrowUp, Leaf, Send } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { subscribeNewsletter } from '../services/newsletterApi';
 
 const FOOTER_COLUMNS = [
   {
@@ -34,6 +36,28 @@ const FOOTER_COLUMNS = [
 
 const Footer = () => {
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  const [email, setEmail] = useState('');
+  const [subscribing, setSubscribing] = useState(false);
+  const [subscribed, setSubscribed] = useState(false);
+
+  const handleSubscribe = async (e) => {
+    e.preventDefault();
+    if (!/^\S+@\S+\.\S+$/.test(email)) {
+      toast.error('Please enter a valid email address');
+      return;
+    }
+    setSubscribing(true);
+    try {
+      await subscribeNewsletter(email);
+      setSubscribed(true);
+      setEmail('');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Subscription failed');
+    } finally {
+      setSubscribing(false);
+    }
+  };
 
   return (
     <footer className="relative bg-white border-t border-gray-100 mt-16 pt-14 pb-8">
@@ -85,6 +109,35 @@ const Footer = () => {
               </ul>
             </div>
           ))}
+        </div>
+
+        {/* Compact newsletter row - blended into footer, small statement + inline form */}
+        <div className="border-t border-gray-100 pt-6 pb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p className="text-sm text-gray-600">
+            <span className="font-medium text-gray-700">Stay in the loop</span> — subscribe for nutrition tips & updates.
+          </p>
+          {subscribed ? (
+            <p className="text-sm text-primary-700 font-medium">You're subscribed — thank you!</p>
+          ) : (
+            <form onSubmit={handleSubscribe} className="flex items-center gap-2 w-full sm:w-auto">
+              <input
+                type="email"
+                required
+                placeholder="Your email address"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="flex-1 sm:w-56 rounded-full border border-gray-200 bg-white/70 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              />
+              <button
+                type="submit"
+                disabled={subscribing}
+                aria-label="Subscribe"
+                className="flex items-center gap-1.5 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-full px-4 py-2 whitespace-nowrap transition-colors disabled:opacity-60"
+              >
+                {subscribing ? '...' : <>Subscribe <Send size={13} /></>}
+              </button>
+            </form>
+          )}
         </div>
 
         <div className="border-t border-gray-100 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">

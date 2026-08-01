@@ -31,7 +31,7 @@ const Articles = () => {
           {articles.map((a) => (
             <Link key={a._id} to={`/articles/${a._id}`} className="card hover:shadow-md transition-shadow overflow-hidden !p-0">
               {a.featuredImage ? (
-                <img src={a.featuredImage} alt={a.title} className="w-full h-40 object-cover" />
+                <img src={a.featuredImage} alt={a.title} loading="lazy" decoding="async" className="w-full h-40 object-cover" />
               ) : (
                 <div className="w-full h-40 bg-primary-50 flex items-center justify-center text-primary-300 text-sm">No image</div>
               )}
