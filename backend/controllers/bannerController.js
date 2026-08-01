@@ -1,9 +1,14 @@
 const asyncHandler = require('express-async-handler');
 const SiteBanner = require('../models/SiteBanner');
 
+// @desc    Get the site banner config (public, used to render it on every page)
+// @route   GET /api/banner
+// @access  Public
 const getBanner = asyncHandler(async (req, res) => {
   let banner = await SiteBanner.findOne();
   if (!banner) {
+    // Return sensible defaults if admin has never configured it yet - no document is created
+    // until the admin actually saves something, keeping this a true "only exists if configured" feature.
     return res.json({
       success: true,
       banner: {
@@ -22,6 +27,9 @@ const getBanner = asyncHandler(async (req, res) => {
   res.json({ success: true, banner });
 });
 
+// @desc    Create or update the site banner config
+// @route   PUT /api/banner
+// @access  Private (admin)
 const updateBanner = asyncHandler(async (req, res) => {
   const {
     enabled, text, linkUrl, linkText, showLinkIcon, backgroundColor, textColor, showCloseButton,
