@@ -5,6 +5,10 @@ dist/
 *.log
 .DS_Store
 
+.env.production
+
+
+
 # Uploaded shop images - keep the folder structure (.gitkeep) but not the files themselves
 backend/uploads/**/*
 !backend/uploads/**/.gitkeep

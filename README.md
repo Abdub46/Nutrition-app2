@@ -52,19 +52,6 @@ Open http://localhost:5173, sign up as a client, or log in with the seeded admin
 - **The chatbot system prompt is rebuilt server-side on every request** from the authenticated user's live profile (age, BMI, dietary habits, lifestyle, etc.), and is explicitly instructed not to diagnose or prescribe medication.
 - **Security**: bcrypt password hashing, JWT auth, Helmet, CORS allow-list, general + auth + chatbot rate limiting, and centralized error handling that never leaks stack traces in production.
 
-## Shop Module
-
-A full e-commerce module for nutritional supplements, built as a natural extension of the app rather than a bolt-on:
-
-- **Only reachable via the Footer** (`Shop` link) — intentionally excluded from the main sidebar/bottom nav per spec. A small cart icon (with live item count) is shown in the header for quick access once items are added.
-- **Storefront**: hero banner, featured/new-arrival/best-seller rails, category/brand/price filters, search with autocomplete suggestions, sorting, pagination, loading skeletons, and empty states (`pages/shop/ShopHome.jsx`).
-- **Product detail**: full gallery, tabs (description/ingredients/nutrition facts/usage & warnings/reviews), related products, wishlist, social share, and a review form (pending admin approval before it's public).
-- **Cart & Checkout**: cart persists in `localStorage` (`context/CartContext.jsx`) so it survives refreshes without requiring login just to browse; checkout collects delivery/payment info and creates a real `Order` document, with **all pricing (subtotal, discount, shipping, total) revalidated server-side** against live product prices and stock — the client-side numbers shown are only an estimate.
-- **Orders**: order history, printable invoice-style detail page, and a one-click "Reorder" that re-adds all items to the cart.
-- **Admin → Shop Management**: a dedicated section (separate from the main admin nav) covering a dashboard (revenue, low/out-of-stock, best sellers, latest orders, recent reviews), full product CRUD with bulk publish/hide/delete/duplicate and image uploads (thumbnail + gallery), category/brand management, order status updates, and review moderation (approve/hide/delete/reply).
-- **Image uploads** are handled via `multer` to local disk storage (`backend/uploads/`), served statically at `/uploads/...`. This is fine for development and small deployments, but **note**: Render's filesystem is ephemeral — uploaded images will be lost on redeploy/restart. For production, swap `middleware/uploadMiddleware.js` to upload to a persistent store (Cloudinary, S3, etc.) instead of local disk.
-- **Coupons**: simple percent/fixed-amount codes with expiry and usage limits, validated both at cart-preview time and re-validated at order creation.
-
 ## Deployment
 
 - **Frontend** → Vercel (`npm run build`, output in `frontend/dist`)
