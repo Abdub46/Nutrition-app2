@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Mail, CheckCircle2 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { subscribeNewsletter } from '../services/shopApi';
+import { subscribeNewsletter } from '../services/newsletterApi';
 
 const Newsletter = () => {
   const [email, setEmail] = useState('');

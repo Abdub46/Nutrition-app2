@@ -18,7 +18,6 @@ const FOOTER_COLUMNS = [
       { label: 'Appointments', to: '/appointments' },
       { label: 'BMI Calculator', to: '/bmi-calculator' },
       { label: 'Energy Calculator', to: '/tools' },
-      { label: 'Shop', to: '/shop' },
     ],
   },
   {

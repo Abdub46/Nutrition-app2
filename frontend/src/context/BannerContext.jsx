@@ -10,12 +10,14 @@ export const BannerProvider = ({ children }) => {
   const [dismissed, setDismissed] = useState(false);
 
   useEffect(() => {
+    // Single lightweight request, fired once, non-blocking - never delays the rest of the app.
     getBanner()
       .then((data) => {
         setBanner(data);
         setDismissed(localStorage.getItem(dismissKeyFor(data)) === '1');
       })
       .catch(() => {
+        // Fail silently - a broken/unreachable banner endpoint should never break the site.
         setBanner(null);
       });
   }, []);

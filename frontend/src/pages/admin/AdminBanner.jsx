@@ -60,6 +60,7 @@ const AdminBanner = () => {
         <p className="text-sm text-gray-500">Controls the promotional bar shown at the very top of the site</p>
       </div>
 
+      {/* Live preview */}
       <div>
         <p className="label-text">Preview</p>
         <div className="rounded-lg overflow-hidden border border-gray-100">

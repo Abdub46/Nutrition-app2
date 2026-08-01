@@ -10,7 +10,6 @@ const TopBanner = () => {
   const content = (
     <>
       <span className="truncate">{banner.text}</span>
-
       {banner.linkUrl && banner.linkText && (
         <span className="inline-flex items-center gap-1 font-semibold underline underline-offset-2 whitespace-nowrap">
           {banner.linkText}
@@ -23,10 +22,7 @@ const TopBanner = () => {
   return (
     <div
       className="fixed top-0 inset-x-0 z-50 h-10 flex items-center justify-center px-4 text-sm gap-2"
-      style={{
-        backgroundColor: banner.backgroundColor,
-        color: banner.textColor,
-      }}
+      style={{ backgroundColor: banner.backgroundColor, color: banner.textColor }}
     >
       {banner.linkUrl ? (
         <a
@@ -39,9 +35,7 @@ const TopBanner = () => {
           {content}
         </a>
       ) : (
-        <div className="flex items-center gap-2 min-w-0">
-          {content}
-        </div>
+        <div className="flex items-center gap-2 min-w-0">{content}</div>
       )}
 
       {banner.showCloseButton && (
