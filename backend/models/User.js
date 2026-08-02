@@ -29,6 +29,7 @@ const userSchema = new mongoose.Schema(
     country: { type: String, default: 'Kenya' },
     county: { type: String, required: true, trim: true },
     residenceTown: { type: String, required: true, trim: true },
+    avatar: { type: String, default: '' }, // Cloudinary secure_url, used for article author display
 
     // Body Measurements (current/latest snapshot; history lives in BmiRecord)
     height: { type: Number, required: true }, // cm

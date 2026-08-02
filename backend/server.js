@@ -16,6 +16,9 @@ const toolsRoutes = require('./routes/toolsRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const newsletterRoutes = require('./routes/newsletterRoutes');
 const bannerRoutes = require('./routes/bannerRoutes');
+const settingsRoutes = require('./routes/settingsRoutes');
+const articleCategoryRoutes = require('./routes/articleCategoryRoutes');
+const uploadRoutes = require('./routes/uploadRoutes');
 
 connectDB();
 
@@ -49,6 +52,9 @@ app.use('/api/tools', toolsRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/newsletter', newsletterRoutes);
 app.use('/api/banner', bannerRoutes);
+app.use('/api/settings', settingsRoutes);
+app.use('/api/article-categories', articleCategoryRoutes);
+app.use('/api/uploads', uploadRoutes);
 
 // 404 + error handler (must be last)
 app.use(notFound);

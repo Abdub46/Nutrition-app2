@@ -49,7 +49,7 @@ const updateUser = asyncHandler(async (req, res) => {
     'hasCurrentMedicalCondition', 'currentMedicalConditionDetails',
     'hasFamilyMedicalHistory', 'familyMedicalHistoryDetails',
     'balancedDietFrequency', 'fruitVegFrequency', 'fastFoodFrequency', 'mealsPerDay',
-    'physicalActivity', 'drugUse', 'drugUseDetails',
+    'physicalActivity', 'drugUse', 'drugUseDetails', 'avatar',
   ];
   editableFields.forEach((field) => {
     if (req.body[field] !== undefined) user[field] = req.body[field];
