@@ -4,16 +4,20 @@ import { BrowserRouter } from 'react-router-dom';
 import App from './App.jsx';
 import { AuthProvider } from './context/AuthContext.jsx';
 import { BannerProvider } from './context/BannerContext.jsx';
+import { SettingsProvider } from './context/SettingsContext.jsx';
 import './index.css';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <BrowserRouter>
-      <BannerProvider>
-        <AuthProvider>
-          <App />
-        </AuthProvider>
-      </BannerProvider>
+      <SettingsProvider>
+        <BannerProvider>
+          <AuthProvider>
+            <App />
+          </AuthProvider>
+        </BannerProvider>
+      </SettingsProvider>
     </BrowserRouter>
   </React.StrictMode>
 );
+

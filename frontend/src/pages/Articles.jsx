@@ -36,9 +36,16 @@ const Articles = () => {
                 <div className="w-full h-40 bg-primary-50 flex items-center justify-center text-primary-300 text-sm">No image</div>
               )}
               <div className="p-4">
-                <p className="text-xs text-gray-400 mb-1">{new Date(a.publishedAt).toLocaleDateString()}</p>
+                {a.category && (
+                  <span className="inline-block text-[11px] font-medium text-primary-700 bg-primary-50 rounded-full px-2 py-0.5 mb-1.5">
+                    {a.category.name}
+                  </span>
+                )}
                 <h3 className="font-semibold text-gray-800 mb-1 line-clamp-2">{a.title}</h3>
-                <p className="text-sm text-gray-500 line-clamp-2">{a.summary}</p>
+                <p className="text-sm text-gray-500 line-clamp-2 mb-2">{a.summary}</p>
+                <p className="text-xs text-gray-400">
+                  Updated: {new Date(a.updatedAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                </p>
               </div>
             </Link>
           ))}

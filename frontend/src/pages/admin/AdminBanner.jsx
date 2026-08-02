@@ -4,7 +4,7 @@ import toast from 'react-hot-toast';
 import { getBanner, updateBanner } from '../../services/bannerApi';
 import { useBanner } from '../../context/BannerContext';
 
-const AdminBanner = () => {
+const AdminBanner = ({ embedded = false }) => {
   const { refreshBanner } = useBanner();
   const [form, setForm] = useState({
     enabled: false,
@@ -54,11 +54,13 @@ const AdminBanner = () => {
   if (loading) return <p className="pt-8 text-sm text-gray-500">Loading banner settings...</p>;
 
   return (
-    <div className="pt-4 max-w-2xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-800">Site Banner</h1>
-        <p className="text-sm text-gray-500">Controls the promotional bar shown at the very top of the site</p>
-      </div>
+    <div className={embedded ? 'space-y-6' : 'pt-4 max-w-2xl space-y-6'}>
+      {!embedded && (
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800">Site Banner</h1>
+          <p className="text-sm text-gray-500">Controls the promotional bar shown at the very top of the site</p>
+        </div>
+      )}
 
       {/* Live preview */}
       <div>

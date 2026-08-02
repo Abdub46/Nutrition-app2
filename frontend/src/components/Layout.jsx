@@ -11,7 +11,7 @@ import {
   Menu,
   X,
   LogOut,
-  Megaphone,
+  Settings,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useBanner } from '../context/BannerContext';
@@ -32,7 +32,7 @@ const adminLinks = [
   { to: '/admin/users', label: 'Users', icon: LayoutDashboard },
   { to: '/admin/appointments', label: 'Appointments', icon: CalendarDays },
   { to: '/admin/articles', label: 'Articles', icon: Newspaper },
-  { to: '/admin/banner', label: 'Site Banner', icon: Megaphone },
+  { to: '/admin/settings', label: 'Settings', icon: Settings },
 ];
 
 const Layout = ({ children }) => {

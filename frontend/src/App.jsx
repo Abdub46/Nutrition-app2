@@ -24,7 +24,7 @@ import AdminHome from './pages/admin/AdminHome';
 import AdminUsers from './pages/admin/AdminUsers';
 import AdminAppointments from './pages/admin/AdminAppointments';
 import AdminArticles from './pages/admin/AdminArticles';
-import AdminBanner from './pages/admin/AdminBanner';
+import AdminSettings from './pages/admin/AdminSettings';
 
 const withLayout = (Component) => (
   <Layout>
@@ -65,7 +65,8 @@ function App() {
         <Route path="/admin/users" element={<AdminRoute>{withLayout(AdminUsers)}</AdminRoute>} />
         <Route path="/admin/appointments" element={<AdminRoute>{withLayout(AdminAppointments)}</AdminRoute>} />
         <Route path="/admin/articles" element={<AdminRoute>{withLayout(AdminArticles)}</AdminRoute>} />
-        <Route path="/admin/banner" element={<AdminRoute>{withLayout(AdminBanner)}</AdminRoute>} />
+        <Route path="/admin/settings" element={<AdminRoute>{withLayout(AdminSettings)}</AdminRoute>} />
+        <Route path="/admin/banner" element={<Navigate to="/admin/settings" replace />} />
 
         <Route path="*" element={<Navigate to={user ? (user.role === 'admin' ? '/admin' : '/dashboard') : '/login'} />} />
       </Routes>

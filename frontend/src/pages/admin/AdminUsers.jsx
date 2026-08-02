@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Eye, Trash2, X } from 'lucide-react';
+import { Eye, Trash2, X, Upload } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../services/api';
+import { uploadImage } from '../../services/uploadApi';
 
 const AdminUsers = () => {
   const [users, setUsers] = useState([]);
@@ -11,6 +12,7 @@ const AdminUsers = () => {
   const [editMode, setEditMode] = useState(false);
   const [editForm, setEditForm] = useState({});
   const [saving, setSaving] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   const loadUsers = async () => {
     setLoading(true);
@@ -53,6 +55,7 @@ const AdminUsers = () => {
         residenceTown: editForm.residenceTown,
         height: Number(editForm.height),
         weight: Number(editForm.weight),
+        avatar: editForm.avatar,
       });
       toast.success('User updated');
       setSelected(data.user);
@@ -62,6 +65,21 @@ const AdminUsers = () => {
       toast.error(err.response?.data?.message || 'Update failed');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleAvatarUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploadingAvatar(true);
+    try {
+      const url = await uploadImage(file, 'avatars');
+      setEditForm((f) => ({ ...f, avatar: url }));
+      toast.success('Avatar uploaded');
+    } catch {
+      toast.error('Upload failed');
+    } finally {
+      setUploadingAvatar(false);
     }
   };
 
@@ -84,7 +102,8 @@ const AdminUsers = () => {
         <p className="text-sm text-gray-500">{users.length} registered client(s)</p>
       </div>
 
-      <div className="card overflow-x-auto !p-0">
+      {/* Desktop: full table (unchanged) */}
+      <div className="hidden md:block card overflow-x-auto !p-0">
         {loading ? (
           <p className="p-5 text-sm text-gray-500">Loading users...</p>
         ) : (
@@ -128,6 +147,30 @@ const AdminUsers = () => {
         )}
       </div>
 
+      {/* Mobile: condensed card list - name, email, View button only */}
+      <div className="md:hidden space-y-2">
+        {loading ? (
+          <p className="text-sm text-gray-500">Loading users...</p>
+        ) : users.length === 0 ? (
+          <p className="text-sm text-gray-500">No users found.</p>
+        ) : (
+          users.map((u) => (
+            <div key={u._id} className="card flex items-center justify-between gap-3 !p-4">
+              <div className="min-w-0">
+                <p className="font-medium text-gray-800 truncate">{u.fullName}</p>
+                <p className="text-xs text-gray-500 truncate">{u.email}</p>
+              </div>
+              <button
+                onClick={() => viewUser(u._id)}
+                className="flex-shrink-0 flex items-center gap-1.5 text-xs font-medium text-primary-700 bg-primary-50 hover:bg-primary-100 rounded-full px-3 py-1.5"
+              >
+                <Eye size={13} /> View
+              </button>
+            </div>
+          ))
+        )}
+      </div>
+
       {selected && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4" onClick={() => setSelected(null)}>
           <div className="bg-white rounded-xl max-w-lg w-full p-6 max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
@@ -162,6 +205,19 @@ const AdminUsers = () => {
               </div>
             ) : (
               <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  {editForm.avatar ? (
+                    <img src={editForm.avatar} alt="" className="h-12 w-12 rounded-full object-cover" />
+                  ) : (
+                    <div className="h-12 w-12 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center text-sm font-semibold">
+                      {editForm.fullName?.charAt(0) || '?'}
+                    </div>
+                  )}
+                  <label className="btn-secondary cursor-pointer flex items-center gap-2 text-sm">
+                    <Upload size={14} /> {uploadingAvatar ? 'Uploading...' : 'Upload Avatar'}
+                    <input type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} disabled={uploadingAvatar} />
+                  </label>
+                </div>
                 <div className="grid grid-cols-2 gap-3">
                   <EditField label="Full Name" value={editForm.fullName} onChange={(v) => setEditForm({ ...editForm, fullName: v })} />
                   <EditField label="Phone" value={editForm.phone} onChange={(v) => setEditForm({ ...editForm, phone: v })} />
