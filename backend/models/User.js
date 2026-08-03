@@ -9,6 +9,12 @@ const frequencyEnum = [
   'Every day',
 ];
 
+// Client-specific fields (nutrition profile) are only required for the 'client' role -
+// writers and admins are staff accounts and don't need this health data.
+const requiredIfClient = function () {
+  return this.role === 'client';
+};
+
 const userSchema = new mongoose.Schema(
   {
     // Personal Information
@@ -22,18 +28,19 @@ const userSchema = new mongoose.Schema(
       match: [/^\S+@\S+\.\S+$/, 'Please provide a valid email address'],
     },
     password: { type: String, required: true, minlength: 6, select: false },
-    phone: { type: String, required: true, trim: true },
-    dateOfBirth: { type: Date, required: true },
-    sex: { type: String, enum: ['Male', 'Female'], required: true },
-    occupation: { type: String, required: true, trim: true },
+    phone: { type: String, required: requiredIfClient, trim: true },
+    dateOfBirth: { type: Date, required: requiredIfClient },
+    sex: { type: String, enum: ['Male', 'Female'], required: requiredIfClient },
+    occupation: { type: String, required: requiredIfClient, trim: true },
     country: { type: String, default: 'Kenya' },
-    county: { type: String, required: true, trim: true },
-    residenceTown: { type: String, required: true, trim: true },
+    county: { type: String, required: requiredIfClient, trim: true },
+    residenceTown: { type: String, required: requiredIfClient, trim: true },
     avatar: { type: String, default: '' }, // Cloudinary secure_url, used for article author display
+    bio: { type: String, default: '', maxlength: 500 }, // optional author bio, shown on articles
 
     // Body Measurements (current/latest snapshot; history lives in BmiRecord)
-    height: { type: Number, required: true }, // cm
-    weight: { type: Number, required: true }, // kg
+    height: { type: Number, required: requiredIfClient }, // cm
+    weight: { type: Number, required: requiredIfClient }, // kg
 
     // Medical History
     hasCurrentMedicalCondition: { type: Boolean, default: false },
@@ -42,10 +49,10 @@ const userSchema = new mongoose.Schema(
     familyMedicalHistoryDetails: { type: String, default: '' },
 
     // Dietary Habits
-    balancedDietFrequency: { type: String, enum: frequencyEnum, required: true },
-    fruitVegFrequency: { type: String, enum: frequencyEnum, required: true },
-    fastFoodFrequency: { type: String, enum: frequencyEnum, required: true },
-    mealsPerDay: { type: String, enum: ['One', 'Two', 'Three', 'Four', 'Five'], required: true },
+    balancedDietFrequency: { type: String, enum: frequencyEnum, required: requiredIfClient },
+    fruitVegFrequency: { type: String, enum: frequencyEnum, required: requiredIfClient },
+    fastFoodFrequency: { type: String, enum: frequencyEnum, required: requiredIfClient },
+    mealsPerDay: { type: String, enum: ['One', 'Two', 'Three', 'Four', 'Five'], required: requiredIfClient },
 
     // Lifestyle
     physicalActivity: { type: Boolean, default: false },
@@ -53,7 +60,18 @@ const userSchema = new mongoose.Schema(
     drugUseDetails: { type: String, default: '' },
 
     // Role-based access control
-    role: { type: String, enum: ['client', 'admin'], default: 'client' },
+    role: { type: String, enum: ['client', 'admin', 'writer'], default: 'client' },
+
+    // Writer/staff account lifecycle
+    isActive: { type: Boolean, default: true },
+    isDeleted: { type: Boolean, default: false }, // soft delete - preserves article authorship integrity
+    deletedAt: { type: Date, default: null },
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null }, // audit: which admin created this account
+
+    // First-login forced password change (for admin-created writer accounts)
+    mustChangePassword: { type: Boolean, default: false },
+    passwordChangedAt: { type: Date, default: null },
+    lastLogin: { type: Date, default: null },
 
     // Password reset
     resetPasswordToken: { type: String, select: false },
@@ -62,8 +80,9 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Virtual: current age computed from DOB
+// Virtual: current age computed from DOB (only meaningful for client accounts)
 userSchema.virtual('age').get(function () {
+  if (!this.dateOfBirth) return null;
   const birthDate = new Date(this.dateOfBirth);
   const today = new Date();
   let age = today.getFullYear() - birthDate.getFullYear();
@@ -72,8 +91,9 @@ userSchema.virtual('age').get(function () {
   return age;
 });
 
-// Virtual: current BMI computed from stored height/weight
+// Virtual: current BMI computed from stored height/weight (only meaningful for client accounts)
 userSchema.virtual('bmi').get(function () {
+  if (!this.height || !this.weight) return null;
   const heightM = this.height / 100;
   return Math.round((this.weight / (heightM * heightM)) * 10) / 10;
 });

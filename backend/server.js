@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
+const mongoSanitize = require('express-mongo-sanitize');
 const connectDB = require('./config/db');
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 const { apiLimiter } = require('./middleware/rateLimitMiddleware');
@@ -18,7 +19,9 @@ const newsletterRoutes = require('./routes/newsletterRoutes');
 const bannerRoutes = require('./routes/bannerRoutes');
 const settingsRoutes = require('./routes/settingsRoutes');
 const articleCategoryRoutes = require('./routes/articleCategoryRoutes');
+const subcategoryRoutes = require('./routes/subcategoryRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
+const writerRoutes = require('./routes/writerRoutes');
 
 connectDB();
 
@@ -34,6 +37,7 @@ app.use(
 );
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: true }));
+app.use(mongoSanitize()); // strips any $ or . operators from req.body/query/params - blocks NoSQL injection
 if (process.env.NODE_ENV !== 'production') {
   app.use(morgan('dev'));
 }
@@ -54,7 +58,9 @@ app.use('/api/newsletter', newsletterRoutes);
 app.use('/api/banner', bannerRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/article-categories', articleCategoryRoutes);
+app.use('/api/subcategories', subcategoryRoutes);
 app.use('/api/uploads', uploadRoutes);
+app.use('/api/writers', writerRoutes);
 
 // 404 + error handler (must be last)
 app.use(notFound);

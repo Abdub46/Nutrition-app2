@@ -5,6 +5,7 @@ const BmiRecord = require('../models/BmiRecord');
 const generateToken = require('../utils/generateToken');
 const { calculateBMI, getBMICategory } = require('../utils/bmiUtils');
 const { isValidKenyanPhone, isDOBValid, isHeightValid, isWeightValid } = require('../utils/validators');
+const { isStrongPassword, STRONG_PASSWORD_MESSAGE } = require('../utils/passwordValidator');
 const { sendEmail } = require('../services/emailService');
 
 // @desc    Register a new client user
@@ -153,6 +154,14 @@ const login = asyncHandler(async (req, res) => {
     throw new Error('Invalid email or password');
   }
 
+  if (user.isDeleted || user.isActive === false) {
+    res.status(403);
+    throw new Error('This account has been deactivated. Please contact an administrator.');
+  }
+
+  user.lastLogin = new Date();
+  await user.save({ validateBeforeSave: false });
+
   res.json({
     success: true,
     token: generateToken(user._id, user.role),
@@ -240,6 +249,45 @@ const resetPassword = asyncHandler(async (req, res) => {
   });
 });
 
+// @desc    Change password (used for the mandatory first-login flow and general use)
+// @route   PUT /api/auth/change-password
+// @access  Private
+const changePassword = asyncHandler(async (req, res) => {
+  const { currentPassword, newPassword, confirmPassword } = req.body;
+
+  if (!currentPassword || !newPassword || !confirmPassword) {
+    res.status(400);
+    throw new Error('All fields are required');
+  }
+
+  if (newPassword !== confirmPassword) {
+    res.status(400);
+    throw new Error('New password and confirmation do not match');
+  }
+
+  if (!isStrongPassword(newPassword)) {
+    res.status(400);
+    throw new Error(STRONG_PASSWORD_MESSAGE);
+  }
+
+  const user = await User.findById(req.user._id).select('+password');
+  if (!(await user.matchPassword(currentPassword))) {
+    res.status(401);
+    throw new Error('Current password is incorrect');
+  }
+
+  user.password = newPassword;
+  user.mustChangePassword = false;
+  user.passwordChangedAt = new Date();
+  await user.save();
+
+  res.json({
+    success: true,
+    message: 'Password changed successfully',
+    user: sanitizeUser(user),
+  });
+});
+
 // Remove sensitive fields before sending user object to client
 const sanitizeUser = (user) => {
   const obj = user.toObject ? user.toObject() : user;
@@ -249,4 +297,4 @@ const sanitizeUser = (user) => {
   return obj;
 };
 
-module.exports = { signup, login, getMe, forgotPassword, resetPassword };
+module.exports = { signup, login, getMe, forgotPassword, resetPassword, changePassword };
