@@ -2,7 +2,8 @@ import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
-const ProtectedRoute = ({ children }) => {
+// UI-level gate only - the real authorization boundary is server-side authorize(...roles).
+const RoleRoute = ({ roles = [], children }) => {
   const { user, loading } = useAuth();
   const location = useLocation();
 
@@ -15,7 +16,7 @@ const ProtectedRoute = ({ children }) => {
   }
 
   if (!user) return <Navigate to="/login" replace />;
-
+  if (!roles.includes(user.role)) return <Navigate to="/dashboard" replace />;
   if (user.mustChangePassword && location.pathname !== '/change-password') {
     return <Navigate to="/change-password" replace />;
   }
@@ -23,4 +24,4 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
-export default ProtectedRoute;
+export default RoleRoute;

@@ -6,12 +6,14 @@ import TopBanner from './components/TopBanner';
 import { useAuth } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
+import RoleRoute from './components/RoleRoute';
 import Layout from './components/Layout';
 
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import ChangePassword from './pages/ChangePassword';
 import Dashboard from './pages/Dashboard';
 import BmiCalculator from './pages/BmiCalculator';
 import Chatbot from './pages/Chatbot';
@@ -22,8 +24,10 @@ import Tools from './pages/Tools';
 
 import AdminHome from './pages/admin/AdminHome';
 import AdminUsers from './pages/admin/AdminUsers';
+import AdminWriters from './pages/admin/AdminWriters';
 import AdminAppointments from './pages/admin/AdminAppointments';
 import AdminArticles from './pages/admin/AdminArticles';
+import AdminCategories from './pages/admin/AdminCategories';
 import AdminSettings from './pages/admin/AdminSettings';
 
 const withLayout = (Component) => (
@@ -31,6 +35,15 @@ const withLayout = (Component) => (
     <Component />
   </Layout>
 );
+
+// Where a logged-in user should land, given their role and password-change status
+const homeRouteFor = (user) => {
+  if (!user) return '/login';
+  if (user.mustChangePassword) return '/change-password';
+  if (user.role === 'admin') return '/admin';
+  if (user.role === 'writer') return '/admin/articles';
+  return '/dashboard';
+};
 
 function App() {
   const { user } = useAuth();
@@ -42,14 +55,15 @@ function App() {
       <Routes>
         <Route
           path="/login"
-          element={user ? <Navigate to={user.role === 'admin' ? '/admin' : '/dashboard'} /> : <Login />}
+          element={user ? <Navigate to={homeRouteFor(user)} /> : <Login />}
         />
         <Route
           path="/signup"
-          element={user ? <Navigate to="/dashboard" /> : <Signup />}
+          element={user ? <Navigate to={homeRouteFor(user)} /> : <Signup />}
         />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password/:token" element={<ResetPassword />} />
+        <Route path="/change-password" element={<ProtectedRoute>{withLayout(ChangePassword)}</ProtectedRoute>} />
 
         {/* Client routes */}
         <Route path="/dashboard" element={<ProtectedRoute>{withLayout(Dashboard)}</ProtectedRoute>} />
@@ -60,15 +74,19 @@ function App() {
         <Route path="/articles/:id" element={<ProtectedRoute>{withLayout(ArticleDetail)}</ProtectedRoute>} />
         <Route path="/tools" element={<ProtectedRoute>{withLayout(Tools)}</ProtectedRoute>} />
 
-        {/* Admin routes */}
+        {/* Shared admin + writer routes - article management, ownership enforced server-side */}
+        <Route path="/admin/articles" element={<RoleRoute roles={['admin', 'writer']}>{withLayout(AdminArticles)}</RoleRoute>} />
+
+        {/* Admin-only routes */}
         <Route path="/admin" element={<AdminRoute>{withLayout(AdminHome)}</AdminRoute>} />
         <Route path="/admin/users" element={<AdminRoute>{withLayout(AdminUsers)}</AdminRoute>} />
+        <Route path="/admin/writers" element={<AdminRoute>{withLayout(AdminWriters)}</AdminRoute>} />
         <Route path="/admin/appointments" element={<AdminRoute>{withLayout(AdminAppointments)}</AdminRoute>} />
-        <Route path="/admin/articles" element={<AdminRoute>{withLayout(AdminArticles)}</AdminRoute>} />
+        <Route path="/admin/categories" element={<AdminRoute>{withLayout(AdminCategories)}</AdminRoute>} />
         <Route path="/admin/settings" element={<AdminRoute>{withLayout(AdminSettings)}</AdminRoute>} />
         <Route path="/admin/banner" element={<Navigate to="/admin/settings" replace />} />
 
-        <Route path="*" element={<Navigate to={user ? (user.role === 'admin' ? '/admin' : '/dashboard') : '/login'} />} />
+        <Route path="*" element={<Navigate to={homeRouteFor(user)} />} />
       </Routes>
     </>
   );

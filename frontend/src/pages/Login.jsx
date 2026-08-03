@@ -16,7 +16,15 @@ const Login = () => {
     try {
       const user = await login(form.email, form.password);
       toast.success('Welcome back!');
-      navigate(user.role === 'admin' ? '/admin' : '/dashboard');
+      if (user.mustChangePassword) {
+        navigate('/change-password');
+      } else if (user.role === 'admin') {
+        navigate('/admin');
+      } else if (user.role === 'writer') {
+        navigate('/admin/articles');
+      } else {
+        navigate('/dashboard');
+      }
     } catch (err) {
       toast.error(err.response?.data?.message || 'Login failed');
     } finally {

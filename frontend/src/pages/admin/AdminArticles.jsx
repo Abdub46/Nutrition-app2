@@ -3,13 +3,19 @@ import { Plus, Edit2, Trash2, X, Upload, Link2, MousePointerClick, Globe2 } from
 import toast from 'react-hot-toast';
 import api from '../../services/api';
 import { getArticleCategories, createArticleCategory } from '../../services/articleCategoryApi';
+import { getSubcategories } from '../../services/subcategoryApi';
 import { uploadImage } from '../../services/uploadApi';
+import { useAuth } from '../../context/AuthContext';
 
-const emptyForm = { title: '', summary: '', content: '', featuredImage: '', category: '' };
+const emptyForm = { title: '', summary: '', content: '', featuredImage: '', category: '', subcategory: '', status: 'Published' };
 
 const AdminArticles = () => {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
+
   const [articles, setArticles] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [subcategoryOptions, setSubcategoryOptions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -31,7 +37,7 @@ const AdminArticles = () => {
   const load = async () => {
     setLoading(true);
     try {
-      const { data } = await api.get('/articles');
+      const { data } = await api.get('/articles/admin/all');
       setArticles(data.articles);
     } catch (err) {
       toast.error('Failed to load articles');
@@ -44,6 +50,17 @@ const AdminArticles = () => {
     load();
     loadCategories();
   }, []);
+
+  // Load subcategory options whenever the selected category changes
+  useEffect(() => {
+    if (!form.category) {
+      setSubcategoryOptions([]);
+      return;
+    }
+    getSubcategories(form.category).then(setSubcategoryOptions).catch(() => setSubcategoryOptions([]));
+  }, [form.category]);
+
+  const canManage = (article) => isAdmin || article.author?._id === user?._id;
 
   const openCreate = () => {
     setEditingId(null);
@@ -59,6 +76,8 @@ const AdminArticles = () => {
       content: article.content,
       featuredImage: article.featuredImage || '',
       category: article.category?._id || '',
+      subcategory: article.subcategory?._id || '',
+      status: article.status || 'Published',
     });
     setModalOpen(true);
   };
@@ -72,7 +91,7 @@ const AdminArticles = () => {
         toast.success('Article updated');
       } else {
         await api.post('/articles', form);
-        toast.success('Article created');
+        toast.success(form.status === 'Draft' ? 'Draft saved' : 'Article published');
       }
       setModalOpen(false);
       load();
@@ -135,7 +154,6 @@ const AdminArticles = () => {
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
     setForm((f) => ({ ...f, content: f.content.slice(0, start) + snippet + f.content.slice(end) }));
-    // restore focus after React re-render
     requestAnimationFrame(() => {
       textarea.focus();
       const cursor = start + snippet.length;
@@ -166,7 +184,7 @@ const AdminArticles = () => {
     <div className="pt-4 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Manage Articles</h1>
+          <h1 className="text-2xl font-bold text-gray-800">{isAdmin ? 'Manage Articles' : 'My Articles'}</h1>
           <p className="text-sm text-gray-500">{articles.length} article(s)</p>
         </div>
         <button onClick={openCreate} className="btn-primary flex items-center gap-2">
@@ -186,21 +204,33 @@ const AdminArticles = () => {
                 <div className="w-full h-32 bg-primary-50 flex items-center justify-center text-primary-300 text-sm">No image</div>
               )}
               <div className="p-4">
-                {a.category && (
-                  <span className="inline-block text-[11px] font-medium text-primary-700 bg-primary-50 rounded-full px-2 py-0.5 mb-1.5">
-                    {a.category.name}
+                <div className="flex items-center gap-1.5 flex-wrap mb-1.5">
+                  {a.category && (
+                    <span className="inline-block text-[11px] font-medium text-primary-700 bg-primary-50 rounded-full px-2 py-0.5">
+                      {a.category.name}
+                    </span>
+                  )}
+                  <span className={`inline-block text-[11px] font-medium rounded-full px-2 py-0.5 ${a.status === 'Draft' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'}`}>
+                    {a.status}
                   </span>
-                )}
-                <h3 className="font-semibold text-gray-800 mb-1 line-clamp-1">{a.title}</h3>
-                <p className="text-sm text-gray-500 line-clamp-2 mb-3">{a.summary}</p>
-                <div className="flex gap-2">
-                  <button onClick={() => openEdit(a)} className="btn-secondary flex-1 flex items-center justify-center gap-1 text-xs py-1.5">
-                    <Edit2 size={14} /> Edit
-                  </button>
-                  <button onClick={() => handleDelete(a._id)} className="flex-1 flex items-center justify-center gap-1 text-xs py-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50">
-                    <Trash2 size={14} /> Delete
-                  </button>
                 </div>
+                <h3 className="font-semibold text-gray-800 mb-1 line-clamp-1">{a.title}</h3>
+                <p className="text-sm text-gray-500 line-clamp-2 mb-2">{a.summary}</p>
+                {isAdmin && a.author && (
+                  <p className="text-xs text-gray-400 mb-3">By {a.author.fullName}</p>
+                )}
+                {canManage(a) ? (
+                  <div className="flex gap-2">
+                    <button onClick={() => openEdit(a)} className="btn-secondary flex-1 flex items-center justify-center gap-1 text-xs py-1.5">
+                      <Edit2 size={14} /> Edit
+                    </button>
+                    <button onClick={() => handleDelete(a._id)} className="flex-1 flex items-center justify-center gap-1 text-xs py-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50">
+                      <Trash2 size={14} /> Delete
+                    </button>
+                  </div>
+                ) : (
+                  <p className="text-xs text-gray-400 italic">Not your article</p>
+                )}
               </div>
             </div>
           ))}
@@ -217,33 +247,50 @@ const AdminArticles = () => {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="label-text">Title</label>
-                <input required className="input-field" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
+                <input required maxLength={200} className="input-field" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
               </div>
 
-              <div>
-                <label className="label-text">Category</label>
-                <div className="flex gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="label-text">Category</label>
                   <select
                     className="input-field"
                     value={form.category}
-                    onChange={(e) => setForm({ ...form, category: e.target.value })}
+                    onChange={(e) => setForm({ ...form, category: e.target.value, subcategory: '' })}
                   >
                     <option value="">No category</option>
                     {categories.map((c) => (
                       <option key={c._id} value={c._id}>{c.name}</option>
                     ))}
                   </select>
+                  <div className="flex gap-2 mt-2">
+                    <input
+                      className="input-field text-sm"
+                      placeholder="Add a new category..."
+                      value={newCategoryName}
+                      onChange={(e) => setNewCategoryName(e.target.value)}
+                    />
+                    <button type="button" onClick={handleAddCategory} disabled={addingCategory} className="btn-secondary text-sm whitespace-nowrap px-3">
+                      {addingCategory ? '...' : 'Add'}
+                    </button>
+                  </div>
                 </div>
-                <div className="flex gap-2 mt-2">
-                  <input
-                    className="input-field text-sm"
-                    placeholder="Add a new category..."
-                    value={newCategoryName}
-                    onChange={(e) => setNewCategoryName(e.target.value)}
-                  />
-                  <button type="button" onClick={handleAddCategory} disabled={addingCategory} className="btn-secondary text-sm whitespace-nowrap px-3">
-                    {addingCategory ? '...' : 'Add'}
-                  </button>
+
+                <div>
+                  <label className="label-text">Subcategory</label>
+                  <select
+                    className="input-field"
+                    value={form.subcategory}
+                    disabled={!form.category}
+                    onChange={(e) => setForm({ ...form, subcategory: e.target.value })}
+                  >
+                    <option value="">
+                      {form.category ? 'No subcategory' : 'Select a category first'}
+                    </option>
+                    {subcategoryOptions.map((s) => (
+                      <option key={s._id} value={s._id}>{s.name}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
@@ -270,7 +317,7 @@ const AdminArticles = () => {
 
               <div>
                 <label className="label-text">Summary</label>
-                <textarea required className="input-field" rows={2} value={form.summary} onChange={(e) => setForm({ ...form, summary: e.target.value })} />
+                <textarea required maxLength={500} className="input-field" rows={2} value={form.summary} onChange={(e) => setForm({ ...form, summary: e.target.value })} />
               </div>
 
               <div>
@@ -321,12 +368,26 @@ const AdminArticles = () => {
                   onChange={(e) => setForm({ ...form, content: e.target.value })}
                 />
                 <p className="text-xs text-gray-400 mt-1">
-                  Content supports basic HTML (paragraphs, bold, links, and the buttons inserted above). It's rendered as-is on the article page.
+                  Content supports basic HTML (paragraphs, bold, links, and the buttons inserted above). It's sanitized against an allowlist of safe tags before saving.
                 </p>
               </div>
 
+              <div>
+                <label className="label-text">Status</label>
+                <div className="flex gap-3">
+                  <label className={`flex-1 border rounded-lg px-3 py-2.5 text-sm text-center cursor-pointer transition-colors ${form.status === 'Draft' ? 'border-yellow-400 bg-yellow-50 text-yellow-700 font-medium' : 'border-gray-200 text-gray-600'}`}>
+                    <input type="radio" className="hidden" checked={form.status === 'Draft'} onChange={() => setForm({ ...form, status: 'Draft' })} />
+                    Save as Draft
+                  </label>
+                  <label className={`flex-1 border rounded-lg px-3 py-2.5 text-sm text-center cursor-pointer transition-colors ${form.status === 'Published' ? 'border-primary-600 bg-primary-50 text-primary-700 font-medium' : 'border-gray-200 text-gray-600'}`}>
+                    <input type="radio" className="hidden" checked={form.status === 'Published'} onChange={() => setForm({ ...form, status: 'Published' })} />
+                    Publish
+                  </label>
+                </div>
+              </div>
+
               <button type="submit" disabled={saving} className="btn-primary w-full">
-                {saving ? 'Saving...' : editingId ? 'Update Article' : 'Publish Article'}
+                {saving ? 'Saving...' : editingId ? 'Update Article' : form.status === 'Draft' ? 'Save Draft' : 'Publish Article'}
               </button>
             </form>
           </div>

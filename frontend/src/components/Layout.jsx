@@ -12,6 +12,9 @@ import {
   X,
   LogOut,
   Settings,
+  UserCog,
+  Tags,
+  KeyRound,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useBanner } from '../context/BannerContext';
@@ -30,9 +33,18 @@ const clientLinks = [
 const adminLinks = [
   { to: '/admin', label: 'Admin Home', icon: ShieldCheck },
   { to: '/admin/users', label: 'Users', icon: LayoutDashboard },
+  { to: '/admin/writers', label: 'Writers', icon: UserCog },
   { to: '/admin/appointments', label: 'Appointments', icon: CalendarDays },
   { to: '/admin/articles', label: 'Articles', icon: Newspaper },
+  { to: '/admin/categories', label: 'Categories', icon: Tags },
   { to: '/admin/settings', label: 'Settings', icon: Settings },
+];
+
+// Writers only have access to their own articles, profile-adjacent settings, and password change -
+// no users, analytics, banner, newsletter, or admin management per the role's restricted permissions.
+const writerLinks = [
+  { to: '/admin/articles', label: 'My Articles', icon: Newspaper },
+  { to: '/change-password', label: 'Change Password', icon: KeyRound },
 ];
 
 const Layout = ({ children }) => {
@@ -41,9 +53,11 @@ const Layout = ({ children }) => {
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const links = user?.role === 'admin' ? adminLinks : clientLinks;
+  const links = user?.role === 'admin' ? adminLinks : user?.role === 'writer' ? writerLinks : clientLinks;
   const bottomNavLinks = links.slice(0, 5);
   const isAdmin = user?.role === 'admin';
+  const isWriter = user?.role === 'writer';
+  const portalLabel = isAdmin ? 'Admin Panel' : isWriter ? 'Writer Portal' : 'Client Portal';
   const bannerOffsetClass = bannerVisible ? 'top-10' : 'top-0';
 
   const handleLogout = () => {
@@ -59,7 +73,7 @@ const Layout = ({ children }) => {
           <BackButton />
           <div>
             <h1 className="text-lg font-bold text-primary-700">NutriCounsel</h1>
-            <p className="text-xs text-gray-500 mt-0.5">{isAdmin ? 'Admin Panel' : 'Client Portal'}</p>
+            <p className="text-xs text-gray-500 mt-0.5">{portalLabel}</p>
           </div>
         </div>
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">

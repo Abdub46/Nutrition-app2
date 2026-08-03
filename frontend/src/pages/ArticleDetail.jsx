@@ -59,7 +59,10 @@ const ArticleDetail = () => {
                 {article.author.fullName?.charAt(0) || '?'}
               </div>
             )}
-            <span className="text-sm font-medium text-gray-700">{article.author.fullName}</span>
+            <div>
+              <p className="text-sm font-medium text-gray-700">{article.author.fullName}</p>
+              {article.author.bio && <p className="text-xs text-gray-400 line-clamp-1">{article.author.bio}</p>}
+            </div>
           </div>
         )}
 
