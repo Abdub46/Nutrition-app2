@@ -25,25 +25,7 @@ const Layout = ({ children }) => {
       </main>
 
 
-      {/* Mobile bottom nav - glassmorphism */}
-            <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-white/70 backdrop-blur-xl border-t border-white/60 flex justify-around py-2">
-              {bottomNavLinks.map(({ to, label, icon: Icon }) => (
-                <NavLink
-                  key={to}
-                  to={to}
-                  end={to === '/admin'}
-                  className={({ isActive }) =>
-                    `flex flex-col items-center gap-0.5 text-[10px] px-2 ${
-                      isActive ? 'text-primary-700' : 'text-gray-500'
-                    }`
-                  }
-                >
-                  <Icon size={20} />
-                  {label.split(' ')[0]}
-                </NavLink>
-              ))}
-            </nav>
-
+      
 
 
 
