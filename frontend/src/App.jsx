@@ -21,6 +21,7 @@ import Appointments from './pages/Appointments';
 import Articles from './pages/Articles';
 import ArticleDetail from './pages/ArticleDetail';
 import Tools from './pages/Tools';
+import Home from './pages/Home';
 
 import AdminHome from './pages/admin/AdminHome';
 import AdminUsers from './pages/admin/AdminUsers';
@@ -36,9 +37,10 @@ const withLayout = (Component) => (
   </Layout>
 );
 
-// Where a logged-in user should land, given their role and password-change status
+// Where a logged-in user should land, given their role and password-change status.
+// Anonymous visitors land on the public Horizon+ homepage rather than being forced to /login.
 const homeRouteFor = (user) => {
-  if (!user) return '/login';
+  if (!user) return '/';
   if (user.mustChangePassword) return '/change-password';
   if (user.role === 'admin') return '/admin';
   if (user.role === 'writer') return '/admin/articles';
@@ -53,6 +55,8 @@ function App() {
       <TopBanner />
       <Toaster position="top-right" toastOptions={{ duration: 3500 }} />
       <Routes>
+        {/* Public homepage - client-facing only, no admin/writer branding or links */}
+        <Route path="/" element={<Home />} />
         <Route
           path="/login"
           element={user ? <Navigate to={homeRouteFor(user)} /> : <Login />}
