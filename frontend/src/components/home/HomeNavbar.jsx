@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Search, Menu, X } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Search, Menu, X, MessageCircle, Wrench, LogOut } from 'lucide-react';
 import { useBanner } from '../../context/BannerContext';
+import { useAuth } from '../../context/AuthContext';
 
 const NAV_LINKS = [
   { label: 'Home', href: '#top', type: 'anchor' },
@@ -14,10 +15,18 @@ const NAV_LINKS = [
 
 const HomeNavbar = () => {
   const { visible: bannerVisible } = useBanner();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState('');
+
+  const handleLogout = () => {
+    setMobileOpen(false);
+    logout();
+    navigate('/login');
+  };
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
@@ -177,6 +186,32 @@ const HomeNavbar = () => {
                     {link.label}
                   </Link>
                 )
+              )}
+
+              {user && (
+                <>
+                  <div className="border-t border-gray-100 my-1" />
+                  <Link
+                    to="/chatbot"
+                    onClick={() => setMobileOpen(false)}
+                    className="flex items-center gap-2 text-base font-medium text-gray-700 hover:text-primary-900"
+                  >
+                    <MessageCircle size={18} /> AI Chatbot
+                  </Link>
+                  <Link
+                    to="/tools"
+                    onClick={() => setMobileOpen(false)}
+                    className="flex items-center gap-2 text-base font-medium text-gray-700 hover:text-primary-900"
+                  >
+                    <Wrench size={18} /> Tools
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center gap-2 text-base font-medium text-red-600 hover:text-red-700"
+                  >
+                    <LogOut size={18} /> Logout
+                  </button>
+                </>
               )}
             </nav>
             <a
