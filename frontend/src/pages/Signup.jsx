@@ -111,7 +111,7 @@ const Signup = () => {
       const { confirmPassword, ...payload } = form;
       await signup(payload);
       toast.success('Account created successfully!');
-      navigate('/dashboard');
+      navigate('/');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Signup failed');
     } finally {

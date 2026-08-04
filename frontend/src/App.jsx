@@ -44,7 +44,7 @@ const homeRouteFor = (user) => {
   if (user.mustChangePassword) return '/change-password';
   if (user.role === 'admin') return '/admin';
   if (user.role === 'writer') return '/admin/articles';
-  return '/dashboard';
+  return '/';
 };
 
 function App() {

@@ -23,7 +23,7 @@ const Login = () => {
       } else if (user.role === 'writer') {
         navigate('/admin/articles');
       } else {
-        navigate('/dashboard');
+        navigate('/');
       }
     } catch (err) {
       toast.error(err.response?.data?.message || 'Login failed');
