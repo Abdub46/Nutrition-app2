@@ -33,4 +33,4 @@ const startKeepAlive = () => {
   console.log(`[keep-alive] scheduled every 14 minutes -> ${healthUrl}`);
 };
 
-// module.exports = { startKeepAlive };
+module.exports = { startKeepAlive };
