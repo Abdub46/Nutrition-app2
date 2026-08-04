@@ -43,7 +43,7 @@ const Chatbot = () => {
   return (
     <div className="pt-4 flex flex-col h-[calc(100vh-8rem)] md:h-[calc(100vh-3rem)]">
       <div className="mb-3">
-        <h1 className="text-2xl font-bold text-gray-800">AI Nutrition Chatbot</h1>
+        <h1 className="text-2xl font-bold text-gray-800">Horizon+ AI</h1>
         <p className="text-sm text-gray-500">Personalized guidance based on your profile</p>
       </div>
 

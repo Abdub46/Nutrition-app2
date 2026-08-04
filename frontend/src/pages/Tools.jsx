@@ -14,7 +14,7 @@ const Tools = () => {
   return (
     <div className="pt-4 space-y-6 max-w-lg">
       <div>
-        <h1 className="text-2xl font-bold text-gray-800">Tools</h1>
+        <h1 className="text-2xl font-bold text-gray-800">General Calculator</h1>
         <p className="text-sm text-gray-500">Quick calculators — results here are not saved to your profile</p>
       </div>
 

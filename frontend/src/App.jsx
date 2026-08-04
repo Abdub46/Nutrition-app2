@@ -68,6 +68,9 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password/:token" element={<ResetPassword />} />
 
+        {/* Public content page - visible before login/signup too */}
+        <Route path="/tools" element={withLayout(Tools)} />
+
         {/* Client routes */}
         <Route path="/dashboard" element={<ProtectedRoute>{withLayout(Dashboard)}</ProtectedRoute>} />
         <Route path="/bmi-calculator" element={<ProtectedRoute>{withLayout(BmiCalculator)}</ProtectedRoute>} />
@@ -75,7 +78,6 @@ function App() {
         <Route path="/appointments" element={<ProtectedRoute>{withLayout(Appointments)}</ProtectedRoute>} />
         <Route path="/articles" element={<ProtectedRoute>{withLayout(Articles)}</ProtectedRoute>} />
         <Route path="/articles/:id" element={<ProtectedRoute>{withLayout(ArticleDetail)}</ProtectedRoute>} />
-        <Route path="/tools" element={<ProtectedRoute>{withLayout(Tools)}</ProtectedRoute>} />
 
         {/* Shared admin + writer routes - article management, ownership enforced server-side */}
         <Route path="/admin/articles" element={<RoleRoute roles={['admin', 'writer']}>{withLayout(AdminArticles)}</RoleRoute>} />

@@ -16,7 +16,7 @@ const Home = () => {
 
   return (
     <div className="bg-white">
-      <HomeNavbar />
+      <HomeNavbar transparentOnTop />
       <HomeHero />
       <WhatWeDo />
       <WhyChooseUs />
