@@ -7,6 +7,7 @@ const mongoSanitize = require('express-mongo-sanitize');
 const connectDB = require('./config/db');
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 const { apiLimiter } = require('./middleware/rateLimitMiddleware');
+const { startKeepAlive } = require('./services/keepAliveService');
 
 const authRoutes = require('./routes/authRoutes');
 const bmiRoutes = require('./routes/bmiRoutes');
@@ -67,6 +68,9 @@ app.use(notFound);
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+  startKeepAlive();
+});
 
 module.exports = app;

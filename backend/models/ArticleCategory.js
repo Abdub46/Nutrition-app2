@@ -9,4 +9,9 @@ const articleCategorySchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// Public listing (isDeleted: false, sorted by name) and the slug-uniqueness checks
+// (findOne({ slug, isDeleted: false })) done on create/update
+articleCategorySchema.index({ isDeleted: 1, name: 1 });
+articleCategorySchema.index({ slug: 1, isDeleted: 1 });
+
 module.exports = mongoose.model('ArticleCategory', articleCategorySchema);

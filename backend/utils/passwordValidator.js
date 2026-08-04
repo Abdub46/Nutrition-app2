@@ -1,6 +1,5 @@
 /**
- * Enforces a stronger password policy than the base client signup (min 6 chars),
- * used specifically for writer/staff accounts and the change-password flow.
+ * Shared password policy, applied everywhere a password is set (signup, reset).
  * Requires: at least 8 characters, one uppercase letter, one lowercase letter, one number.
  */
 const isStrongPassword = (password) => {

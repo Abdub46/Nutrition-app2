@@ -12,4 +12,7 @@ const bmiRecordSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// BMI history/trend/analysis are always fetched per-user, ordered by recordedAt
+bmiRecordSchema.index({ user: 1, recordedAt: 1 });
+
 module.exports = mongoose.model('BmiRecord', bmiRecordSchema);

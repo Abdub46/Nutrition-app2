@@ -1,7 +1,6 @@
 const asyncHandler = require('express-async-handler');
 const User = require('../models/User');
 const Article = require('../models/Article');
-const { isStrongPassword, STRONG_PASSWORD_MESSAGE } = require('../utils/passwordValidator');
 
 // @desc    Get all writers with published article counts
 // @route   GET /api/writers
@@ -64,12 +63,11 @@ const checkWriterEmail = asyncHandler(async (req, res) => {
 });
 
 // @desc    Add a writer - upgrades an existing client account in place (keeping their
-//          client-side access and data) if the email matches one, otherwise creates a
-//          brand new staff account
+//          client-side access and data), found via the email-check step
 // @route   POST /api/writers
 // @access  Private (admin)
 const createWriter = asyncHandler(async (req, res) => {
-  const { email, qualification, firstName, lastName, tempPassword } = req.body;
+  const { email, qualification } = req.body;
 
   if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
     res.status(400);
@@ -83,70 +81,38 @@ const createWriter = asyncHandler(async (req, res) => {
 
   const existing = await User.findOne({ email: email.toLowerCase(), isDeleted: false });
 
-  if (existing) {
-    if (existing.role === 'writer') {
-      res.status(400);
-      throw new Error('This user is already a writer');
-    }
-    if (existing.role === 'admin') {
-      res.status(400);
-      throw new Error('Cannot convert an admin account to a writer');
-    }
-
-    // Upgrade the existing client account in place - fullName, password, and all of
-    // their client-side data (BMI history, appointments, etc.) are left untouched.
-    existing.role = 'writer';
-    existing.qualification = qualification;
-    existing.isActive = true;
-    existing.createdBy = req.user._id;
-    await existing.save();
-
-    return res.status(200).json({
-      success: true,
-      upgraded: true,
-      writer: {
-        _id: existing._id,
-        fullName: existing.fullName,
-        email: existing.email,
-        qualification: existing.qualification,
-        isActive: existing.isActive,
-        createdAt: existing.createdAt,
-      },
-    });
+  if (!existing) {
+    res.status(404);
+    throw new Error('No existing account found for this email. The person must sign up as a client first before being made a writer.');
   }
 
-  // No existing account with this email - create a brand new staff account
-  if (!firstName || !lastName || !tempPassword) {
+  if (existing.role === 'writer') {
     res.status(400);
-    throw new Error('First name, last name, and a temporary password are required for a new account');
+    throw new Error('This user is already a writer');
   }
-
-  if (!isStrongPassword(tempPassword)) {
+  if (existing.role === 'admin') {
     res.status(400);
-    throw new Error(STRONG_PASSWORD_MESSAGE);
+    throw new Error('Cannot convert an admin account to a writer');
   }
 
-  const writer = await User.create({
-    fullName: `${firstName.trim()} ${lastName.trim()}`,
-    email: email.toLowerCase(),
-    password: tempPassword,
-    role: 'writer',
-    qualification,
-    isActive: true,
-    mustChangePassword: true,
-    createdBy: req.user._id,
-  });
+  // Upgrade the existing client account in place - fullName, password, and all of
+  // their client-side data (BMI history, appointments, etc.) are left untouched.
+  existing.role = 'writer';
+  existing.qualification = qualification;
+  existing.isActive = true;
+  existing.createdBy = req.user._id;
+  await existing.save();
 
-  res.status(201).json({
+  res.status(200).json({
     success: true,
-    upgraded: false,
+    upgraded: true,
     writer: {
-      _id: writer._id,
-      fullName: writer.fullName,
-      email: writer.email,
-      qualification: writer.qualification,
-      isActive: writer.isActive,
-      createdAt: writer.createdAt,
+      _id: existing._id,
+      fullName: existing.fullName,
+      email: existing.email,
+      qualification: existing.qualification,
+      isActive: existing.isActive,
+      createdAt: existing.createdAt,
     },
   });
 });

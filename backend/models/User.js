@@ -27,7 +27,7 @@ const userSchema = new mongoose.Schema(
       trim: true,
       match: [/^\S+@\S+\.\S+$/, 'Please provide a valid email address'],
     },
-    password: { type: String, required: true, minlength: 6, select: false },
+    password: { type: String, required: true, minlength: 8, select: false },
     phone: { type: String, required: requiredIfClient, trim: true },
     dateOfBirth: { type: Date, required: requiredIfClient },
     sex: { type: String, enum: ['Male', 'Female'], required: requiredIfClient },
@@ -78,8 +78,6 @@ const userSchema = new mongoose.Schema(
     deletedAt: { type: Date, default: null },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null }, // audit: which admin created this account
 
-    // First-login forced password change (for admin-created writer accounts)
-    mustChangePassword: { type: Boolean, default: false },
     passwordChangedAt: { type: Date, default: null },
     lastLogin: { type: Date, default: null },
 
@@ -89,6 +87,12 @@ const userSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// Covers the common admin-facing queries: listing clients (role: 'client'),
+// listing active writers (role: 'writer', isDeleted: false), and the analytics
+// aggregations that $match on role + createdAt. email already has its own
+// unique index from `unique: true` above, so it isn't repeated here.
+userSchema.index({ role: 1, isDeleted: 1, createdAt: -1 });
 
 // Virtual: current age computed from DOB (only meaningful for client accounts)
 userSchema.virtual('age').get(function () {

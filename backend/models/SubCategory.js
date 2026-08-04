@@ -14,4 +14,7 @@ const subCategorySchema = new mongoose.Schema(
 // different categories are fine, e.g. "Snacks" could exist under two categories)
 subCategorySchema.index({ category: 1, slug: 1 }, { unique: true });
 
+// Public listing: find({ isDeleted: false, category? }).sort({ name: 1 })
+subCategorySchema.index({ isDeleted: 1, category: 1, name: 1 });
+
 module.exports = mongoose.model('SubCategory', subCategorySchema);

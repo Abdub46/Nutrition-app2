@@ -34,4 +34,9 @@ const appointmentSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// My appointments, most recent first
+appointmentSchema.index({ user: 1, createdAt: -1 });
+// Admin list, optionally filtered by status, most recent first
+appointmentSchema.index({ status: 1, createdAt: -1 });
+
 module.exports = mongoose.model('Appointment', appointmentSchema);
