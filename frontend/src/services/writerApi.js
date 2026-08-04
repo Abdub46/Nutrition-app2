@@ -1,6 +1,7 @@
 import api from './api';
 
 export const getWriters = () => api.get('/writers').then((r) => r.data.writers);
+export const checkWriterEmail = (email) => api.get('/writers/check-email', { params: { email } }).then((r) => r.data);
 export const createWriter = (payload) => api.post('/writers', payload).then((r) => r.data.writer);
 export const updateWriter = (id, payload) => api.put(`/writers/${id}`, payload).then((r) => r.data.writer);
 export const toggleWriterStatus = (id) => api.put(`/writers/${id}/status`).then((r) => r.data);

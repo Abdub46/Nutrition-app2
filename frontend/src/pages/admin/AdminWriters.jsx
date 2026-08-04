@@ -1,16 +1,24 @@
 import React, { useEffect, useState } from 'react';
-import { Plus, Eye, EyeOff, Trash2, X, Edit2 } from 'lucide-react';
+import { Plus, Eye, EyeOff, Trash2, X, Edit2, ArrowLeft } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { getWriters, createWriter, updateWriter, toggleWriterStatus, deleteWriter } from '../../services/writerApi';
+import { getWriters, checkWriterEmail, createWriter, updateWriter, toggleWriterStatus, deleteWriter } from '../../services/writerApi';
 
-const emptyCreateForm = { firstName: '', lastName: '', email: '', tempPassword: '' };
+const emptyNewAccountForm = { firstName: '', lastName: '', tempPassword: '' };
 
 const AdminWriters = () => {
   const [writers, setWriters] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const [createOpen, setCreateOpen] = useState(false);
-  const [createForm, setCreateForm] = useState(emptyCreateForm);
+  // step: 'email' (enter + check an email) -> 'new' (no account found, full signup form)
+  //       or 'upgrade' (existing client account found, just confirm + qualification)
+  const [step, setStep] = useState('email');
+  const [emailInput, setEmailInput] = useState('');
+  const [checking, setChecking] = useState(false);
+  const [checkError, setCheckError] = useState('');
+  const [foundUser, setFoundUser] = useState(null);
+  const [newAccountForm, setNewAccountForm] = useState(emptyNewAccountForm);
+  const [qualification, setQualification] = useState('');
   const [creating, setCreating] = useState(false);
 
   const [editingWriter, setEditingWriter] = useState(null);
@@ -24,17 +32,58 @@ const AdminWriters = () => {
 
   useEffect(() => { load(); }, []);
 
+  const resetCreateState = () => {
+    setStep('email');
+    setEmailInput('');
+    setCheckError('');
+    setFoundUser(null);
+    setNewAccountForm(emptyNewAccountForm);
+    setQualification('');
+  };
+
+  const closeCreate = () => {
+    setCreateOpen(false);
+    resetCreateState();
+  };
+
+  const handleCheckEmail = async (e) => {
+    e.preventDefault();
+    setCheckError('');
+    setChecking(true);
+    try {
+      const result = await checkWriterEmail(emailInput.trim());
+      if (!result.exists) {
+        setFoundUser(null);
+        setStep('new');
+      } else if (result.eligible) {
+        setFoundUser(result.user);
+        setStep('upgrade');
+      } else {
+        setCheckError(result.reason || 'This email cannot be used for a writer account');
+      }
+    } catch (err) {
+      setCheckError(err.response?.data?.message || 'Failed to check email');
+    } finally {
+      setChecking(false);
+    }
+  };
+
   const handleCreate = async (e) => {
     e.preventDefault();
+    if (!qualification) {
+      toast.error('Please select whether this person is a Nutritionist or a Dietitian');
+      return;
+    }
     setCreating(true);
     try {
-      await createWriter(createForm);
-      toast.success('Writer account created');
-      setCreateForm(emptyCreateForm);
-      setCreateOpen(false);
+      const payload = { email: emailInput.trim(), qualification };
+      if (step === 'new') Object.assign(payload, newAccountForm);
+      const result = await createWriter(payload);
+      toast.success(result?.upgraded ? 'Existing account upgraded to writer' : 'Writer account created');
+      closeCreate();
       load();
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to create writer');
+      toast.error(err.response?.data?.message || 'Failed to save writer');
     } finally {
       setCreating(false);
     }
@@ -104,6 +153,7 @@ const AdminWriters = () => {
               <tr>
                 <th className="text-left px-4 py-3">Writer</th>
                 <th className="text-left px-4 py-3">Email</th>
+                <th className="text-left px-4 py-3">Qualification</th>
                 <th className="text-left px-4 py-3">Status</th>
                 <th className="text-left px-4 py-3">Published</th>
                 <th className="text-left px-4 py-3">Created</th>
@@ -127,6 +177,7 @@ const AdminWriters = () => {
                     </div>
                   </td>
                   <td className="px-4 py-3 text-gray-600">{w.email}</td>
+                  <td className="px-4 py-3 text-gray-600">{w.qualification || '—'}</td>
                   <td className="px-4 py-3">
                     <span className={`text-xs font-medium px-2 py-1 rounded-full ${w.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
                       {w.isActive ? 'Active' : 'Inactive'}
@@ -176,7 +227,7 @@ const AdminWriters = () => {
                   {w.isActive ? 'Active' : 'Inactive'}
                 </span>
               </div>
-              <p className="text-xs text-gray-400 mb-2">{w.publishedArticleCount} published article(s)</p>
+              <p className="text-xs text-gray-400 mb-2">{w.qualification || '—'} &bull; {w.publishedArticleCount} published article(s)</p>
               <div className="flex gap-2">
                 <button onClick={() => openEdit(w)} className="btn-secondary flex-1 text-xs py-1.5">Edit</button>
                 <button onClick={() => handleToggleStatus(w._id)} className="btn-secondary flex-1 text-xs py-1.5">
@@ -189,38 +240,100 @@ const AdminWriters = () => {
         )}
       </div>
 
-      {/* Create writer modal */}
+      {/* Add writer modal - step 1 checks the email for an existing account, then either
+          upgrades that client to writer or collects details for a brand new account */}
       {createOpen && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4" onClick={() => setCreateOpen(false)}>
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4" onClick={closeCreate}>
           <div className="bg-white rounded-xl max-w-md w-full p-6" onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold text-gray-800">Add Writer</h2>
-              <button onClick={() => setCreateOpen(false)}><X size={20} /></button>
+              <div className="flex items-center gap-2">
+                {step !== 'email' && (
+                  <button type="button" onClick={resetCreateState} aria-label="Back" className="p-1 -ml-1 rounded hover:bg-gray-100 text-gray-500">
+                    <ArrowLeft size={18} />
+                  </button>
+                )}
+                <h2 className="text-lg font-bold text-gray-800">Add Writer</h2>
+              </div>
+              <button onClick={closeCreate}><X size={20} /></button>
             </div>
-            <form onSubmit={handleCreate} className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
+
+            {step === 'email' && (
+              <form onSubmit={handleCheckEmail} className="space-y-4">
                 <div>
-                  <label className="label-text">First Name</label>
-                  <input required className="input-field" value={createForm.firstName} onChange={(e) => setCreateForm({ ...createForm, firstName: e.target.value })} />
+                  <label className="label-text">Email Address</label>
+                  <input
+                    required
+                    type="email"
+                    className="input-field"
+                    value={emailInput}
+                    onChange={(e) => { setEmailInput(e.target.value); setCheckError(''); }}
+                  />
+                  <p className="text-xs text-gray-400 mt-1">
+                    We'll check if this belongs to an existing account first. Writers must be a registered Nutritionist or Dietitian.
+                  </p>
+                </div>
+                {checkError && <p className="text-sm text-red-600">{checkError}</p>}
+                <button type="submit" disabled={checking} className="btn-primary w-full">
+                  {checking ? 'Checking...' : 'Continue'}
+                </button>
+              </form>
+            )}
+
+            {step === 'upgrade' && (
+              <form onSubmit={handleCreate} className="space-y-4">
+                <div className="bg-primary-50 rounded-lg p-3">
+                  <p className="text-sm text-gray-700">
+                    An existing client account was found for <span className="font-semibold">{foundUser?.fullName}</span> ({foundUser?.email}).
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    They'll be upgraded to a writer, keeping their client login, history, and access to the client menu - with article management added.
+                  </p>
                 </div>
                 <div>
-                  <label className="label-text">Last Name</label>
-                  <input required className="input-field" value={createForm.lastName} onChange={(e) => setCreateForm({ ...createForm, lastName: e.target.value })} />
+                  <label className="label-text">Qualification</label>
+                  <select required className="input-field" value={qualification} onChange={(e) => setQualification(e.target.value)}>
+                    <option value="" disabled>Select qualification...</option>
+                    <option value="Nutritionist">Nutritionist</option>
+                    <option value="Dietitian">Dietitian</option>
+                  </select>
                 </div>
-              </div>
-              <div>
-                <label className="label-text">Email Address</label>
-                <input required type="email" className="input-field" value={createForm.email} onChange={(e) => setCreateForm({ ...createForm, email: e.target.value })} />
-              </div>
-              <div>
-                <label className="label-text">Temporary Password</label>
-                <input required className="input-field" value={createForm.tempPassword} onChange={(e) => setCreateForm({ ...createForm, tempPassword: e.target.value })} />
-                <p className="text-xs text-gray-400 mt-1">
-                  At least 8 characters, with an uppercase letter, a lowercase letter, and a number. The writer will be required to change this on first login.
-                </p>
-              </div>
-              <button type="submit" disabled={creating} className="btn-primary w-full">{creating ? 'Creating...' : 'Create Writer Account'}</button>
-            </form>
+                <button type="submit" disabled={creating} className="btn-primary w-full">
+                  {creating ? 'Upgrading...' : 'Upgrade to Writer'}
+                </button>
+              </form>
+            )}
+
+            {step === 'new' && (
+              <form onSubmit={handleCreate} className="space-y-4">
+                <p className="text-sm text-gray-500">No existing account for <span className="font-medium text-gray-700">{emailInput}</span> - this will create a brand new writer account.</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="label-text">First Name</label>
+                    <input required className="input-field" value={newAccountForm.firstName} onChange={(e) => setNewAccountForm({ ...newAccountForm, firstName: e.target.value })} />
+                  </div>
+                  <div>
+                    <label className="label-text">Last Name</label>
+                    <input required className="input-field" value={newAccountForm.lastName} onChange={(e) => setNewAccountForm({ ...newAccountForm, lastName: e.target.value })} />
+                  </div>
+                </div>
+                <div>
+                  <label className="label-text">Qualification</label>
+                  <select required className="input-field" value={qualification} onChange={(e) => setQualification(e.target.value)}>
+                    <option value="" disabled>Select qualification...</option>
+                    <option value="Nutritionist">Nutritionist</option>
+                    <option value="Dietitian">Dietitian</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="label-text">Temporary Password</label>
+                  <input required className="input-field" value={newAccountForm.tempPassword} onChange={(e) => setNewAccountForm({ ...newAccountForm, tempPassword: e.target.value })} />
+                  <p className="text-xs text-gray-400 mt-1">
+                    At least 8 characters, with an uppercase letter, a lowercase letter, and a number. The writer will be required to change this on first login.
+                  </p>
+                </div>
+                <button type="submit" disabled={creating} className="btn-primary w-full">{creating ? 'Creating...' : 'Create Writer Account'}</button>
+              </form>
+            )}
           </div>
         </div>
       )}

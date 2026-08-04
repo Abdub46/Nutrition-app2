@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, Menu, X, MessageCircle, Wrench, LogOut } from 'lucide-react';
+import { Search, Menu, X, MessageCircle, Wrench, Newspaper, LogOut } from 'lucide-react';
 import { useBanner } from '../../context/BannerContext';
 import { useAuth } from '../../context/AuthContext';
 
@@ -205,6 +205,15 @@ const HomeNavbar = () => {
                   >
                     <Wrench size={18} /> Tools
                   </Link>
+                  {(user.role === 'writer' || user.role === 'admin') && (
+                    <Link
+                      to="/admin/articles"
+                      onClick={() => setMobileOpen(false)}
+                      className="flex items-center gap-2 text-base font-medium text-gray-700 hover:text-primary-900"
+                    >
+                      <Newspaper size={18} /> My Articles
+                    </Link>
+                  )}
                   <button
                     onClick={handleLogout}
                     className="flex items-center gap-2 text-base font-medium text-red-600 hover:text-red-700"
