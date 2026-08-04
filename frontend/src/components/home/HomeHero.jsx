@@ -55,12 +55,11 @@ const HomeHero = () => {
             >
               About Horizon <ArrowRight size={16} />
             </a>
-            <Link
-              to="/articles"
-              className="inline-flex items-center gap-1.5 text-white/90 hover:text-white text-sm font-semibold border-b border-white/40 hover:border-white pb-0.5 transition-colors duration-300"
-            >
-              View All <ArrowRight size={14} />
-            </Link>
+
+
+           
+
+
           </div>
         </div>
       </div>
