@@ -1,5 +1,6 @@
 import React from 'react';
 import { CheckCircle2 } from 'lucide-react';
+import horizonImage from '../assets/images/horizonimage.png';
 
 const BENEFITS = [
   {
@@ -28,12 +29,12 @@ const WhyChooseUs = () => {
           {/* Left image */}
           <div className="relative">
             <div className="rounded-3xl overflow-hidden shadow-xl">
-              <img
-                src="https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=1000&q=80"
-                alt="A friendly nutritionist consulting with a client, surrounded by healthy foods in a bright clinic"
-                className="w-full h-[420px] md:h-[480px] object-cover"
-                loading="lazy"
-              />
+            <img
+  src={horizonImage}
+  alt="Nutrition assessment workspace with healthy foods and meal planning tools"
+  className="w-full h-[500px] lg:h-[540px] object-cover"
+  loading="lazy"
+/>
             </div>
             <div className="hidden md:block absolute -bottom-6 -right-6 bg-white rounded-2xl shadow-lg border border-gray-100 px-6 py-4">
               <p className="text-2xl font-bold text-primary-900">10+ yrs</p>
