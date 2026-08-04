@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const siteSettingsSchema = new mongoose.Schema(
   {
     // Website
-    websiteName: { type: String, default: 'NutriCounsel' },
+    websiteName: { type: String, default: 'Horizon+' },
     websiteDescription: { type: String, default: '' },
     websiteLogo: { type: String, default: '' }, // Cloudinary secure_url
     websiteFavicon: { type: String, default: '' }, // Cloudinary secure_url

@@ -18,6 +18,7 @@ const getWriters = asyncHandler(async (req, res) => {
         email: w.email,
         avatar: w.avatar,
         bio: w.bio,
+        qualification: w.qualification,
         isActive: w.isActive,
         publishedArticleCount: publishedCount,
         createdAt: w.createdAt,
@@ -29,20 +30,95 @@ const getWriters = asyncHandler(async (req, res) => {
   res.json({ success: true, writers: shaped });
 });
 
-// @desc    Create a new writer account
+// @desc    Check whether an email belongs to an existing account before adding a writer,
+//          so the admin knows upfront whether this will create a new account or upgrade one
+// @route   GET /api/writers/check-email?email=...
+// @access  Private (admin)
+const checkWriterEmail = asyncHandler(async (req, res) => {
+  const { email } = req.query;
+
+  if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
+    res.status(400);
+    throw new Error('Please provide a valid email address');
+  }
+
+  const existing = await User.findOne({ email: email.toLowerCase(), isDeleted: false });
+
+  if (!existing) {
+    return res.json({ exists: false });
+  }
+
+  if (existing.role === 'writer') {
+    return res.json({ exists: true, eligible: false, reason: 'This person is already a writer' });
+  }
+
+  if (existing.role === 'admin') {
+    return res.json({ exists: true, eligible: false, reason: 'This is an admin account and cannot be made a writer' });
+  }
+
+  res.json({
+    exists: true,
+    eligible: true,
+    user: { fullName: existing.fullName, email: existing.email },
+  });
+});
+
+// @desc    Add a writer - upgrades an existing client account in place (keeping their
+//          client-side access and data) if the email matches one, otherwise creates a
+//          brand new staff account
 // @route   POST /api/writers
 // @access  Private (admin)
 const createWriter = asyncHandler(async (req, res) => {
-  const { firstName, lastName, email, tempPassword } = req.body;
+  const { email, qualification, firstName, lastName, tempPassword } = req.body;
 
-  if (!firstName || !lastName || !email || !tempPassword) {
-    res.status(400);
-    throw new Error('First name, last name, email, and temporary password are all required');
-  }
-
-  if (!/^\S+@\S+\.\S+$/.test(email)) {
+  if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
     res.status(400);
     throw new Error('Please provide a valid email address');
+  }
+
+  if (!qualification || !['Nutritionist', 'Dietitian'].includes(qualification)) {
+    res.status(400);
+    throw new Error('Please specify whether this person is a Nutritionist or a Dietitian');
+  }
+
+  const existing = await User.findOne({ email: email.toLowerCase(), isDeleted: false });
+
+  if (existing) {
+    if (existing.role === 'writer') {
+      res.status(400);
+      throw new Error('This user is already a writer');
+    }
+    if (existing.role === 'admin') {
+      res.status(400);
+      throw new Error('Cannot convert an admin account to a writer');
+    }
+
+    // Upgrade the existing client account in place - fullName, password, and all of
+    // their client-side data (BMI history, appointments, etc.) are left untouched.
+    existing.role = 'writer';
+    existing.qualification = qualification;
+    existing.isActive = true;
+    existing.createdBy = req.user._id;
+    await existing.save();
+
+    return res.status(200).json({
+      success: true,
+      upgraded: true,
+      writer: {
+        _id: existing._id,
+        fullName: existing.fullName,
+        email: existing.email,
+        qualification: existing.qualification,
+        isActive: existing.isActive,
+        createdAt: existing.createdAt,
+      },
+    });
+  }
+
+  // No existing account with this email - create a brand new staff account
+  if (!firstName || !lastName || !tempPassword) {
+    res.status(400);
+    throw new Error('First name, last name, and a temporary password are required for a new account');
   }
 
   if (!isStrongPassword(tempPassword)) {
@@ -50,17 +126,12 @@ const createWriter = asyncHandler(async (req, res) => {
     throw new Error(STRONG_PASSWORD_MESSAGE);
   }
 
-  const existing = await User.findOne({ email: email.toLowerCase() });
-  if (existing) {
-    res.status(400);
-    throw new Error('A user with this email already exists');
-  }
-
   const writer = await User.create({
     fullName: `${firstName.trim()} ${lastName.trim()}`,
     email: email.toLowerCase(),
     password: tempPassword,
     role: 'writer',
+    qualification,
     isActive: true,
     mustChangePassword: true,
     createdBy: req.user._id,
@@ -68,10 +139,12 @@ const createWriter = asyncHandler(async (req, res) => {
 
   res.status(201).json({
     success: true,
+    upgraded: false,
     writer: {
       _id: writer._id,
       fullName: writer.fullName,
       email: writer.email,
+      qualification: writer.qualification,
       isActive: writer.isActive,
       createdAt: writer.createdAt,
     },
@@ -143,4 +216,4 @@ const deleteWriter = asyncHandler(async (req, res) => {
   res.json({ success: true, message: 'Writer removed' });
 });
 
-module.exports = { getWriters, createWriter, updateWriter, toggleWriterStatus, deleteWriter };
+module.exports = { getWriters, checkWriterEmail, createWriter, updateWriter, toggleWriterStatus, deleteWriter };

@@ -62,6 +62,16 @@ const userSchema = new mongoose.Schema(
     // Role-based access control
     role: { type: String, enum: ['client', 'admin', 'writer'], default: 'client' },
 
+    // Professional qualification - required once an account becomes a writer,
+    // since only nutritionists/dietitians are allowed to author articles
+    qualification: {
+      type: String,
+      enum: ['Nutritionist', 'Dietitian'],
+      required: function () {
+        return this.role === 'writer';
+      },
+    },
+
     // Writer/staff account lifecycle
     isActive: { type: Boolean, default: true },
     isDeleted: { type: Boolean, default: false }, // soft delete - preserves article authorship integrity
