@@ -17,6 +17,11 @@ const ResetPassword = () => {
       toast.error('Passwords do not match');
       return;
     }
+    const strongEnough = password.length >= 8 && /[A-Z]/.test(password) && /[a-z]/.test(password) && /[0-9]/.test(password);
+    if (!strongEnough) {
+      toast.error('Password must be at least 8 characters and include an uppercase letter, a lowercase letter, and a number');
+      return;
+    }
     setLoading(true);
     try {
       const { data } = await api.put(`/auth/reset-password/${token}`, { password });
@@ -41,17 +46,20 @@ const ResetPassword = () => {
           <PasswordInput
             label="New Password"
             required
-            minLength={6}
+            minLength={8}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
           <PasswordInput
             label="Confirm Password"
             required
-            minLength={6}
+            minLength={8}
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
           />
+          <p className="text-xs text-gray-400">
+            Must be at least 8 characters, with an uppercase letter, a lowercase letter, and a number.
+          </p>
           <button type="submit" disabled={loading} className="btn-primary w-full">
             {loading ? 'Resetting...' : 'Reset Password'}
           </button>

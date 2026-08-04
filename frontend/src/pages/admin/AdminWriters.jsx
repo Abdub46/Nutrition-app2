@@ -3,21 +3,18 @@ import { Plus, Eye, EyeOff, Trash2, X, Edit2, ArrowLeft } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getWriters, checkWriterEmail, createWriter, updateWriter, toggleWriterStatus, deleteWriter } from '../../services/writerApi';
 
-const emptyNewAccountForm = { firstName: '', lastName: '', tempPassword: '' };
-
 const AdminWriters = () => {
   const [writers, setWriters] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const [createOpen, setCreateOpen] = useState(false);
-  // step: 'email' (enter + check an email) -> 'new' (no account found, full signup form)
-  //       or 'upgrade' (existing client account found, just confirm + qualification)
+  // Two-step flow: 'email' (enter + check an email) -> 'upgrade' (existing client
+  // account found, confirm + qualification, one click to upgrade).
   const [step, setStep] = useState('email');
   const [emailInput, setEmailInput] = useState('');
   const [checking, setChecking] = useState(false);
   const [checkError, setCheckError] = useState('');
   const [foundUser, setFoundUser] = useState(null);
-  const [newAccountForm, setNewAccountForm] = useState(emptyNewAccountForm);
   const [qualification, setQualification] = useState('');
   const [creating, setCreating] = useState(false);
 
@@ -37,7 +34,6 @@ const AdminWriters = () => {
     setEmailInput('');
     setCheckError('');
     setFoundUser(null);
-    setNewAccountForm(emptyNewAccountForm);
     setQualification('');
   };
 
@@ -54,7 +50,7 @@ const AdminWriters = () => {
       const result = await checkWriterEmail(emailInput.trim());
       if (!result.exists) {
         setFoundUser(null);
-        setStep('new');
+        setCheckError('No account found with this email. The person must sign up as a client first before being made a writer.');
       } else if (result.eligible) {
         setFoundUser(result.user);
         setStep('upgrade');
@@ -77,9 +73,8 @@ const AdminWriters = () => {
     setCreating(true);
     try {
       const payload = { email: emailInput.trim(), qualification };
-      if (step === 'new') Object.assign(payload, newAccountForm);
-      const result = await createWriter(payload);
-      toast.success(result?.upgraded ? 'Existing account upgraded to writer' : 'Writer account created');
+      await createWriter(payload);
+      toast.success('Existing account upgraded to writer');
       closeCreate();
       load();
     } catch (err) {
@@ -240,8 +235,8 @@ const AdminWriters = () => {
         )}
       </div>
 
-      {/* Add writer modal - step 1 checks the email for an existing account, then either
-          upgrades that client to writer or collects details for a brand new account */}
+      {/* Add writer modal - two-step flow: step 1 checks the email for an existing client
+          account, step 2 confirms the upgrade (qualification + one click) */}
       {createOpen && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4" onClick={closeCreate}>
           <div className="bg-white rounded-xl max-w-md w-full p-6" onClick={(e) => e.stopPropagation()}>
@@ -300,38 +295,6 @@ const AdminWriters = () => {
                 <button type="submit" disabled={creating} className="btn-primary w-full">
                   {creating ? 'Upgrading...' : 'Upgrade to Writer'}
                 </button>
-              </form>
-            )}
-
-            {step === 'new' && (
-              <form onSubmit={handleCreate} className="space-y-4">
-                <p className="text-sm text-gray-500">No existing account for <span className="font-medium text-gray-700">{emailInput}</span> - this will create a brand new writer account.</p>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="label-text">First Name</label>
-                    <input required className="input-field" value={newAccountForm.firstName} onChange={(e) => setNewAccountForm({ ...newAccountForm, firstName: e.target.value })} />
-                  </div>
-                  <div>
-                    <label className="label-text">Last Name</label>
-                    <input required className="input-field" value={newAccountForm.lastName} onChange={(e) => setNewAccountForm({ ...newAccountForm, lastName: e.target.value })} />
-                  </div>
-                </div>
-                <div>
-                  <label className="label-text">Qualification</label>
-                  <select required className="input-field" value={qualification} onChange={(e) => setQualification(e.target.value)}>
-                    <option value="" disabled>Select qualification...</option>
-                    <option value="Nutritionist">Nutritionist</option>
-                    <option value="Dietitian">Dietitian</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="label-text">Temporary Password</label>
-                  <input required className="input-field" value={newAccountForm.tempPassword} onChange={(e) => setNewAccountForm({ ...newAccountForm, tempPassword: e.target.value })} />
-                  <p className="text-xs text-gray-400 mt-1">
-                    At least 8 characters, with an uppercase letter, a lowercase letter, and a number. The writer will be required to change this on first login.
-                  </p>
-                </div>
-                <button type="submit" disabled={creating} className="btn-primary w-full">{creating ? 'Creating...' : 'Create Writer Account'}</button>
               </form>
             )}
           </div>

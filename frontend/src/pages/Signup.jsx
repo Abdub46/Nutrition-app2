@@ -62,8 +62,10 @@ const Signup = () => {
         toast.error('Please fill in all personal information fields');
         return false;
       }
-      if (form.password.length < 6) {
-        toast.error('Password must be at least 6 characters');
+      const strongEnough =
+        form.password.length >= 8 && /[A-Z]/.test(form.password) && /[a-z]/.test(form.password) && /[0-9]/.test(form.password);
+      if (!strongEnough) {
+        toast.error('Password must be at least 8 characters and include an uppercase letter, a lowercase letter, and a number');
         return false;
       }
       if (form.password !== form.confirmPassword) {

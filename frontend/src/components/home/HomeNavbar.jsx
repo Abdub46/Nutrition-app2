@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, Menu, X, MessageCircle, Wrench, Newspaper, LogOut } from 'lucide-react';
+import { Search, Menu, X, MessageCircle, Wrench, Newspaper, LogOut, LayoutDashboard, Users, PenSquare, CalendarCheck, FolderTree, Settings } from 'lucide-react';
 import { useBanner } from '../../context/BannerContext';
 import { useAuth } from '../../context/AuthContext';
 
@@ -213,6 +213,52 @@ const HomeNavbar = () => {
                     >
                       <Newspaper size={18} /> My Articles
                     </Link>
+                  )}
+                  {user.role === 'admin' && (
+                    <>
+                      <Link
+                        to="/admin"
+                        onClick={() => setMobileOpen(false)}
+                        className="flex items-center gap-2 text-base font-medium text-gray-700 hover:text-primary-900"
+                      >
+                        <LayoutDashboard size={18} /> Admin Dashboard
+                      </Link>
+                      <Link
+                        to="/admin/users"
+                        onClick={() => setMobileOpen(false)}
+                        className="flex items-center gap-2 text-base font-medium text-gray-700 hover:text-primary-900"
+                      >
+                        <Users size={18} /> Users
+                      </Link>
+                      <Link
+                        to="/admin/writers"
+                        onClick={() => setMobileOpen(false)}
+                        className="flex items-center gap-2 text-base font-medium text-gray-700 hover:text-primary-900"
+                      >
+                        <PenSquare size={18} /> Writers
+                      </Link>
+                      <Link
+                        to="/admin/appointments"
+                        onClick={() => setMobileOpen(false)}
+                        className="flex items-center gap-2 text-base font-medium text-gray-700 hover:text-primary-900"
+                      >
+                        <CalendarCheck size={18} /> Appointments
+                      </Link>
+                      <Link
+                        to="/admin/categories"
+                        onClick={() => setMobileOpen(false)}
+                        className="flex items-center gap-2 text-base font-medium text-gray-700 hover:text-primary-900"
+                      >
+                        <FolderTree size={18} /> Categories
+                      </Link>
+                      <Link
+                        to="/admin/settings"
+                        onClick={() => setMobileOpen(false)}
+                        className="flex items-center gap-2 text-base font-medium text-gray-700 hover:text-primary-900"
+                      >
+                        <Settings size={18} /> Settings
+                      </Link>
+                    </>
                   )}
                   <button
                     onClick={handleLogout}

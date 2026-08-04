@@ -58,15 +58,8 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('user', JSON.stringify(data.user));
   };
 
-  const changePassword = async (currentPassword, newPassword, confirmPassword) => {
-    const { data } = await api.put('/auth/change-password', { currentPassword, newPassword, confirmPassword });
-    setUser(data.user);
-    localStorage.setItem('user', JSON.stringify(data.user));
-    return data.user;
-  };
-
   return (
-    <AuthContext.Provider value={{ user, loading, login, signup, logout, refreshUser, changePassword }}>
+    <AuthContext.Provider value={{ user, loading, login, signup, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

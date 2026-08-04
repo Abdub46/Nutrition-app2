@@ -16,13 +16,10 @@ const Login = () => {
     try {
       const user = await login(form.email, form.password);
       toast.success('Welcome back!');
-      if (user.mustChangePassword) {
-        navigate('/change-password');
-      } else if (user.role === 'admin') {
-        navigate('/admin');
-      } else if (user.role === 'writer') {
+      if (user.role === 'writer') {
         navigate('/admin/articles');
       } else {
+        // Admins land on the public homepage too, same as clients.
         navigate('/');
       }
     } catch (err) {

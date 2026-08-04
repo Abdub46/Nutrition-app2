@@ -2,6 +2,7 @@ import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import TopBanner from './components/TopBanner';
+import NetworkStatus from './components/NetworkStatus';
 
 import { useAuth } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -13,7 +14,6 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
-import ChangePassword from './pages/ChangePassword';
 import Dashboard from './pages/Dashboard';
 import BmiCalculator from './pages/BmiCalculator';
 import Chatbot from './pages/Chatbot';
@@ -37,12 +37,11 @@ const withLayout = (Component) => (
   </Layout>
 );
 
-// Where a logged-in user should land, given their role and password-change status.
-// Anonymous visitors land on the public Horizon+ homepage rather than being forced to /login.
+// Where a logged-in user should land, given their role.
+// The public Horizon+ homepage is now the landing spot for everyone, including admins -
+// only writers still land straight on their article workspace.
 const homeRouteFor = (user) => {
   if (!user) return '/';
-  if (user.mustChangePassword) return '/change-password';
-  if (user.role === 'admin') return '/admin';
   if (user.role === 'writer') return '/admin/articles';
   return '/';
 };
@@ -53,6 +52,7 @@ function App() {
   return (
     <>
       <TopBanner />
+      <NetworkStatus />
       <Toaster position="top-right" toastOptions={{ duration: 3500 }} />
       <Routes>
         {/* Public homepage - client-facing only, no admin/writer branding or links */}
@@ -67,7 +67,6 @@ function App() {
         />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password/:token" element={<ResetPassword />} />
-        <Route path="/change-password" element={<ProtectedRoute>{withLayout(ChangePassword)}</ProtectedRoute>} />
 
         {/* Client routes */}
         <Route path="/dashboard" element={<ProtectedRoute>{withLayout(Dashboard)}</ProtectedRoute>} />

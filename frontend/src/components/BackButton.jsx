@@ -3,9 +3,10 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 
 // Top-level "home" pages have nowhere useful to go back to within the app.
-// The public homepage ('/') is now the landing spot after login for clients,
-// so '/dashboard' is a regular sub-page and gets a back arrow like the rest.
-const HOME_PATHS = ['/admin'];
+// The public homepage ('/') is now the landing spot after login for everyone,
+// including admins, so every other page - '/admin' included - gets a back
+// arrow like the rest.
+const HOME_PATHS = ['/'];
 
 const BackButton = ({ className = '' }) => {
   const navigate = useNavigate();
