@@ -1,6 +1,6 @@
 import React from 'react';
 import { CheckCircle2 } from 'lucide-react';
-import horizonImage from '../assets/images/horizonimage.png';
+import horizonImage from "../../assets/images/horizonimage.png";
 
 const BENEFITS = [
   {
@@ -36,10 +36,17 @@ const WhyChooseUs = () => {
   loading="lazy"
 />
             </div>
+
+
+            {/*
+
             <div className="hidden md:block absolute -bottom-6 -right-6 bg-white rounded-2xl shadow-lg border border-gray-100 px-6 py-4">
               <p className="text-2xl font-bold text-primary-900">10+ yrs</p>
               <p className="text-xs text-gray-500">of trusted nutrition guidance</p>
             </div>
+
+            */}
+            
           </div>
 
           {/* Right content */}
