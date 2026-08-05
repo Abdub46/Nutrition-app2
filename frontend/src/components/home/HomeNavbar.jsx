@@ -273,13 +273,16 @@ const HomeNavbar = ({ transparentOnTop = false }) => {
       </div>
 
       {/* Mobile drawer */}
-      {mobileOpen && (
-        <div className="lg:hidden fixed inset-0 z-50 bg-black/40" onClick={closeMobile}>
-          <div
-            className="bg-white w-72 h-full ml-auto p-6 flex flex-col overflow-y-auto shadow-xl animate-[fadeIn_0.2s_ease-out]"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between mb-8">
+{mobileOpen && (
+ <div
+  className="lg:hidden fixed inset-0 z-50 bg-black/40 flex justify-end"
+  onClick={closeMobile}
+>
+ <div
+  className="bg-white w-72 h-screen shadow-xl flex flex-col animate-[fadeIn_0.2s_ease-out]"
+  onClick={closeMobile}
+>
+            <div className="px-6 pt-6 pb-5 flex items-center justify-between border-b border-gray-100">
               <span className="text-xl font-black uppercase italic text-primary-900" style={{ transform: 'skewX(-6deg)', display: 'inline-block' }}>
                 HORIZON<span className="text-accent-500 not-italic">+</span>
               </span>
@@ -287,7 +290,26 @@ const HomeNavbar = ({ transparentOnTop = false }) => {
                 <X size={20} className="text-gray-500" />
               </button>
             </div>
-            <nav className="flex flex-col gap-5">
+
+
+
+
+
+
+
+
+
+  <nav className="flex-1 overflow-y-auto px-6 py-6 flex flex-col gap-5">
+
+
+
+
+
+
+
+
+
+
               {BASE_LINKS.map((link) => (
                 <Link
                   key={link.label}
@@ -353,6 +375,9 @@ const HomeNavbar = ({ transparentOnTop = false }) => {
           </div>
         </div>
       )}
+
+
+
     </header>
   );
 };
