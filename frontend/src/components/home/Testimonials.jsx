@@ -5,14 +5,20 @@ const TESTIMONIALS = [
   {
     name: 'Grace Wanjiku',
     location: 'Nairobi, Kenya',
-    photo: 'https://i.pravatar.cc/150?img=47',
+    
+
+
+    photo: 'https://api.dicebear.com/9.x/personas/svg',
+
+
+
     quote:
       'Horizon+ completely changed how I think about food. The articles are practical and the BMI tracker keeps me accountable every week.',
   },
   {
     name: 'Brian Otieno',
     location: 'Kisumu, Kenya',
-    photo: 'https://i.pravatar.cc/150?img=12',
+    photo: 'https://api.dicebear.com/9.x/personas/svg',
     quote:
       'My counselling sessions were personal and genuinely helpful. I finally have a nutrition plan that fits my everyday life.',
   },
