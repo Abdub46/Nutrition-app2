@@ -1,24 +1,19 @@
 import React from 'react';
 import { Quote, Star } from 'lucide-react';
+import avatar from '../../assets/images/avatar.jpeg';
 
 const TESTIMONIALS = [
   {
     name: 'Grace Wanjiku',
     location: 'Nairobi, Kenya',
-    
-
-
-    photo: 'https://api.dicebear.com/9.x/icons/svg',
-
-
-
+    photo: avatar,
     quote:
       'Horizon+ completely changed how I think about food. The articles are practical and the BMI tracker keeps me accountable every week.',
   },
   {
     name: 'Brian Otieno',
     location: 'Kisumu, Kenya',
-    photo: 'https://api.dicebear.com/9.x/icons/svg',
+    photo: avatar,
     quote:
       'My counselling sessions were personal and genuinely helpful. I finally have a nutrition plan that fits my everyday life.',
   },
