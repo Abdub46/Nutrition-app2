@@ -8,7 +8,7 @@ const TESTIMONIALS = [
     
 
 
-    photo: 'https://api.dicebear.com/9.x/personas/svg',
+    photo: 'https://api.dicebear.com/9.x/icons/svg',
 
 
 
@@ -18,7 +18,7 @@ const TESTIMONIALS = [
   {
     name: 'Brian Otieno',
     location: 'Kisumu, Kenya',
-    photo: 'https://api.dicebear.com/9.x/personas/svg',
+    photo: 'https://api.dicebear.com/9.x/icons/svg',
     quote:
       'My counselling sessions were personal and genuinely helpful. I finally have a nutrition plan that fits my everyday life.',
   },
