@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Search, Menu, X, MessageCircle, LogOut, LayoutDashboard, Users, PenSquare,
@@ -103,6 +103,7 @@ const HomeNavbar = ({ transparentOnTop = false }) => {
   const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const menuButtonRef = useRef(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState('');
 
@@ -120,6 +121,28 @@ const HomeNavbar = ({ transparentOnTop = false }) => {
     window.addEventListener('scroll', onScroll);
     return () => window.removeEventListener('scroll', onScroll);
   }, [transparentOnTop]);
+
+
+
+
+  useEffect(() => {
+  if (!mobileOpen) return;
+
+  const handleDocumentClick = (event) => {
+    // Don't close immediately when clicking the hamburger to open it.
+    if (menuButtonRef.current?.contains(event.target)) {
+      return;
+    }
+
+    setMobileOpen(false);
+  };
+
+  document.addEventListener('click', handleDocumentClick);
+
+  return () => {
+    document.removeEventListener('click', handleDocumentClick);
+  };
+}, [mobileOpen]);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -261,7 +284,8 @@ const HomeNavbar = ({ transparentOnTop = false }) => {
           )}
 
           <button
-            onClick={() => setMobileOpen(true)}
+  ref={menuButtonRef}
+  onClick={() => setMobileOpen(true)}
             aria-label="Open menu"
             className={`lg:hidden p-2 rounded-full transition-colors duration-300 ${
               isSolid ? 'text-primary-900 hover:bg-gray-100' : 'text-white hover:bg-white/10'
@@ -276,11 +300,11 @@ const HomeNavbar = ({ transparentOnTop = false }) => {
 {mobileOpen && (
  <div
   className="lg:hidden fixed inset-0 z-50 bg-black/40 flex justify-end"
-  onClick={closeMobile}
+  
 >
  <div
   className="bg-white w-72 h-screen shadow-xl flex flex-col animate-[fadeIn_0.2s_ease-out]"
-  onClick={closeMobile}
+  
 >
             <div className="px-6 pt-6 pb-5 flex items-center justify-between border-b border-gray-100">
               <span className="text-xl font-black uppercase italic text-primary-900" style={{ transform: 'skewX(-6deg)', display: 'inline-block' }}>
@@ -299,7 +323,10 @@ const HomeNavbar = ({ transparentOnTop = false }) => {
 
 
 
-  <nav className="flex-1 overflow-y-auto px-6 py-6 flex flex-col gap-5">
+  <nav
+  className="flex-1 overflow-y-auto px-6 py-6 flex flex-col gap-5"
+  onClick={closeMobile}
+>
 
 
 
