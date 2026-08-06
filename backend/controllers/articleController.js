@@ -1,20 +1,33 @@
 const asyncHandler = require('express-async-handler');
 const Article = require('../models/Article');
 const { sanitizeArticleContent } = require('../utils/sanitizeContent');
+const cache = require('../utils/cache');
 
 const POPULATE_AUTHOR = 'fullName avatar bio';
 const POPULATE_CATEGORY = 'name slug';
 const POPULATE_SUBCATEGORY = 'name slug';
 
+const PUBLIC_LIST_CACHE_KEY = 'articles:public';
+const SINGLE_ARTICLE_CACHE_PREFIX = 'article:';
+const FEATURED_CACHE_KEY = 'articles:featured';
+const CACHE_TTL_MS = 60 * 1000; // 1 min - public listing/detail pages, hit far more than articles change
+
 // @desc    Get all PUBLISHED articles (public card listing)
 // @route   GET /api/articles
 // @access  Public
 const getArticles = asyncHandler(async (req, res) => {
+  const cached = cache.get(PUBLIC_LIST_CACHE_KEY);
+  if (cached) {
+    return res.json({ success: true, articles: cached });
+  }
+
   const articles = await Article.find({ status: 'Published' })
     .populate('author', POPULATE_AUTHOR)
     .populate('category', POPULATE_CATEGORY)
     .populate('subcategory', POPULATE_SUBCATEGORY)
     .sort({ publishedAt: -1 });
+
+  cache.set(PUBLIC_LIST_CACHE_KEY, articles, CACHE_TTL_MS);
   res.json({ success: true, articles });
 });
 
@@ -22,6 +35,12 @@ const getArticles = asyncHandler(async (req, res) => {
 // @route   GET /api/articles/:id
 // @access  Public
 const getArticleById = asyncHandler(async (req, res) => {
+  const cacheKey = `${SINGLE_ARTICLE_CACHE_PREFIX}${req.params.id}`;
+  const cached = cache.get(cacheKey);
+  if (cached) {
+    return res.json({ success: true, article: cached.article, relatedArticles: cached.relatedArticles });
+  }
+
   const article = await Article.findById(req.params.id)
     .populate('author', POPULATE_AUTHOR)
     .populate('category', POPULATE_CATEGORY)
@@ -44,7 +63,26 @@ const getArticleById = asyncHandler(async (req, res) => {
       .limit(3);
   }
 
+  cache.set(cacheKey, { article, relatedArticles }, CACHE_TTL_MS);
   res.json({ success: true, article, relatedArticles });
+});
+
+// @desc    Get the current homepage featured article (public - null if none is set)
+// @route   GET /api/articles/featured/current
+// @access  Public
+const getFeaturedArticle = asyncHandler(async (req, res) => {
+  const cached = cache.get(FEATURED_CACHE_KEY);
+  if (cached !== undefined) {
+    return res.json({ success: true, article: cached });
+  }
+
+  const article = await Article.findOne({ isFeatured: true, status: 'Published' })
+    .populate('author', POPULATE_AUTHOR)
+    .populate('category', POPULATE_CATEGORY)
+    .populate('subcategory', POPULATE_SUBCATEGORY);
+
+  cache.set(FEATURED_CACHE_KEY, article || null, CACHE_TTL_MS);
+  res.json({ success: true, article: article || null });
 });
 
 // @desc    Admin/Writer: get articles for management (all statuses; writers see only their own)
@@ -60,6 +98,44 @@ const getAdminArticles = asyncHandler(async (req, res) => {
     .sort({ updatedAt: -1 });
 
   res.json({ success: true, articles });
+});
+
+// @desc    Set the homepage featured article - unsets any previously featured
+//          article first, since only one can be featured at a time
+// @route   PUT /api/articles/:id/feature
+// @access  Private (admin only - deliberately not available to writers)
+const setFeaturedArticle = asyncHandler(async (req, res) => {
+  const article = await Article.findById(req.params.id);
+  if (!article) {
+    res.status(404);
+    throw new Error('Article not found');
+  }
+  if (article.status !== 'Published') {
+    res.status(400);
+    throw new Error('Only a published article can be featured');
+  }
+
+  await Article.updateMany({ isFeatured: true }, { isFeatured: false });
+  article.isFeatured = true;
+  await article.save();
+
+  const populated = await article.populate([
+    { path: 'author', select: POPULATE_AUTHOR },
+    { path: 'category', select: POPULATE_CATEGORY },
+    { path: 'subcategory', select: POPULATE_SUBCATEGORY },
+  ]);
+
+  cache.del(FEATURED_CACHE_KEY);
+  res.json({ success: true, article: populated });
+});
+
+// @desc    Clear the homepage featured article, if one is set
+// @route   PUT /api/articles/featured/clear
+// @access  Private (admin only)
+const unsetFeaturedArticle = asyncHandler(async (req, res) => {
+  await Article.updateMany({ isFeatured: true }, { isFeatured: false });
+  cache.del(FEATURED_CACHE_KEY);
+  res.json({ success: true });
 });
 
 // @desc    Create article
@@ -99,6 +175,7 @@ const createArticle = asyncHandler(async (req, res) => {
     { path: 'subcategory', select: POPULATE_SUBCATEGORY },
   ]);
 
+  cache.del(PUBLIC_LIST_CACHE_KEY);
   res.status(201).json({ success: true, article: populated });
 });
 
@@ -137,6 +214,9 @@ const updateArticle = asyncHandler(async (req, res) => {
     { path: 'subcategory', select: POPULATE_SUBCATEGORY },
   ]);
 
+  cache.del(PUBLIC_LIST_CACHE_KEY);
+  cache.del(`${SINGLE_ARTICLE_CACHE_PREFIX}${article._id}`);
+  cache.del(FEATURED_CACHE_KEY);
   res.json({ success: true, article: populated });
 });
 
@@ -156,7 +236,20 @@ const deleteArticle = asyncHandler(async (req, res) => {
   }
 
   await article.deleteOne();
+  cache.del(PUBLIC_LIST_CACHE_KEY);
+  cache.del(`${SINGLE_ARTICLE_CACHE_PREFIX}${article._id}`);
+  cache.del(FEATURED_CACHE_KEY);
   res.json({ success: true, message: 'Article deleted' });
 });
 
-module.exports = { getArticles, getArticleById, getAdminArticles, createArticle, updateArticle, deleteArticle };
+module.exports = {
+  getArticles,
+  getArticleById,
+  getFeaturedArticle,
+  getAdminArticles,
+  setFeaturedArticle,
+  unsetFeaturedArticle,
+  createArticle,
+  updateArticle,
+  deleteArticle,
+};

@@ -11,6 +11,10 @@ const articleSchema = new mongoose.Schema(
     subcategory: { type: mongoose.Schema.Types.ObjectId, ref: 'SubCategory', default: null },
     status: { type: String, enum: ['Draft', 'Published'], default: 'Published' }, // default keeps existing articles publicly visible
     publishedAt: { type: Date, default: Date.now },
+    // Admin-only "Featured Article" homepage spot - deliberately separate from the
+    // regular writer-facing article form (writers can create/edit articles, but
+    // only an admin can feature one). At most one article is featured at a time.
+    isFeatured: { type: Boolean, default: false },
   },
   { timestamps: true } // createdAt (preserved) / updatedAt (bumped on every edit) - "Last Modified Date"
 );
@@ -21,5 +25,7 @@ articleSchema.index({ status: 1, publishedAt: -1 });
 articleSchema.index({ category: 1, status: 1, publishedAt: -1 });
 // Admin/writer management listing, and a writer's own articles specifically
 articleSchema.index({ author: 1, updatedAt: -1 });
+// Homepage "featured article" lookup
+articleSchema.index({ isFeatured: 1, status: 1 });
 
 module.exports = mongoose.model('Article', articleSchema);
