@@ -12,8 +12,8 @@ const Chatbot = () => {
   const endRef = useRef(null);
 
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  }, [messages, sending]);
 
   const handleSend = async (e) => {
     e.preventDefault();
@@ -41,13 +41,13 @@ const Chatbot = () => {
   };
 
   return (
-    <div className="pt-4 flex flex-col h-[calc(100vh-8rem)] md:h-[calc(100vh-3rem)]">
-      <div className="mb-3">
+    <div className="pt-4 space-y-4">
+      <div>
         <h1 className="text-2xl font-bold text-gray-800">Horizon+ AI</h1>
         <p className="text-sm text-gray-500">Personalized guidance based on your profile</p>
       </div>
 
-      <div className="card flex-1 overflow-y-auto flex flex-col gap-3 mb-3">
+      <div className="card flex flex-col gap-3">
         {messages.map((m, i) => (
           <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             <div
@@ -67,7 +67,7 @@ const Chatbot = () => {
         <div ref={endRef} />
       </div>
 
-      <form onSubmit={handleSend} className="flex gap-2">
+      <form onSubmit={handleSend} className="flex gap-2 sticky bottom-4 bg-gray-50/95 backdrop-blur-sm py-2 -mx-1 px-1">
         <input
           className="input-field flex-1"
           placeholder="Ask about nutrition, BMI, meals, hydration..."

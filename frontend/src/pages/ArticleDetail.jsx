@@ -6,6 +6,7 @@ import api from '../services/api';
 import { useSettings } from '../context/SettingsContext';
 import RelatedPosts from '../components/articles/RelatedPosts';
 import ArticleSidebar from '../components/articles/ArticleSidebar';
+import Comments from '../components/articles/Comments';
 
 const ArticleDetail = () => {
   const { id } = useParams();
@@ -87,6 +88,8 @@ const ArticleDetail = () => {
         />
 
         <RelatedPosts articles={relatedArticles} />
+
+        <Comments articleId={article._id} />
       </div>
 
       {/* Sidebar - true sidebar on desktop (lg+), stacks below the article on tablet/mobile via the grid above */}
