@@ -20,7 +20,7 @@ const HomeHero = () => {
       <div className="absolute inset-0 bg-primary-900/10" />
 
       {/* Content */}
-      <div className="relative max-w-7xl mx-auto px-4 md:px-8 w-full pt-44 md:pt-24">
+      <div className="relative max-w-7xl mx-auto px-4 md:px-8 w-full pt-44 md:pt-36">
         <div className="max-w-xl">
           {/* Badge */}
           <div className="inline-flex items-center gap-3 mb-6 animate-[fadeInUp_0.8s_ease-out]">
