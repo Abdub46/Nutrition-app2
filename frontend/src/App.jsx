@@ -29,6 +29,7 @@ import AdminWriters from './pages/admin/AdminWriters';
 import AdminAppointments from './pages/admin/AdminAppointments';
 import AdminArticles from './pages/admin/AdminArticles';
 import AdminCategories from './pages/admin/AdminCategories';
+import AdminFeaturedArticle from './pages/admin/AdminFeaturedArticle';
 import AdminSettings from './pages/admin/AdminSettings';
 
 const withLayout = (Component) => (
@@ -88,6 +89,7 @@ function App() {
         <Route path="/admin/writers" element={<AdminRoute>{withLayout(AdminWriters)}</AdminRoute>} />
         <Route path="/admin/appointments" element={<AdminRoute>{withLayout(AdminAppointments)}</AdminRoute>} />
         <Route path="/admin/categories" element={<AdminRoute>{withLayout(AdminCategories)}</AdminRoute>} />
+        <Route path="/admin/featured-article" element={<AdminRoute>{withLayout(AdminFeaturedArticle)}</AdminRoute>} />
         <Route path="/admin/settings" element={<AdminRoute>{withLayout(AdminSettings)}</AdminRoute>} />
         <Route path="/admin/banner" element={<Navigate to="/admin/settings" replace />} />
 

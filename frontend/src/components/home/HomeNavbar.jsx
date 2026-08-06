@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Search, Menu, X, MessageCircle, LogOut, LayoutDashboard, Users, PenSquare,
-  CalendarCheck, FolderTree, Settings, UserPlus, BarChart3, ChevronDown, Newspaper,
+  CalendarCheck, FolderTree, Settings, UserPlus, BarChart3, ChevronDown, Newspaper, Star,
 } from 'lucide-react';
 import { useBanner } from '../../context/BannerContext';
 import { useAuth } from '../../context/AuthContext';
@@ -43,6 +43,7 @@ const SETTINGS_ITEMS = [
   { label: 'Categories', to: '/admin/categories', icon: FolderTree },
   { label: 'Add Writer', to: '/admin/writers', icon: UserPlus },
   { label: 'Add Article', to: '/admin/articles', icon: PenSquare },
+  { label: 'Add Featured Article', to: '/admin/featured-article', icon: Star },
 ];
 
 // Desktop dropdown - trigger is a plain button (not a link), items live underneath.

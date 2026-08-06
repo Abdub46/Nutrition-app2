@@ -3,6 +3,7 @@ import HomeNavbar from '../components/home/HomeNavbar';
 import HomeHero from '../components/home/HomeHero';
 import WhatWeDo from '../components/home/WhatWeDo';
 import WhyChooseUs from '../components/home/WhyChooseUs';
+import FeaturedArticle from '../components/home/FeaturedArticle';
 import Testimonials from '../components/home/Testimonials';
 import HomeFooter from '../components/home/HomeFooter';
 
@@ -20,6 +21,7 @@ const Home = () => {
       <HomeHero />
       <WhatWeDo />
       <WhyChooseUs />
+      <FeaturedArticle />
       <Testimonials />
       <HomeFooter />
     </div>
