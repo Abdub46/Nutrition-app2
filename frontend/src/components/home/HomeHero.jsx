@@ -4,7 +4,7 @@ import { ArrowRight } from 'lucide-react';
 
 const HomeHero = () => {
   return (
-    <section className="relative min-h-[92vh] flex items-start md:items-center overflow-hidden">
+    <section className="relative min-h-[100vh] flex items-start md:items-center overflow-hidden">
       {/* Background photography */}
       <div
         className="absolute inset-0 bg-cover bg-center scale-105"
