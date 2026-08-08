@@ -1,3 +1,5 @@
+
+
 const jwt = require('jsonwebtoken');
 const asyncHandler = require('express-async-handler');
 const User = require('../models/User');
@@ -6,7 +8,10 @@ const User = require('../models/User');
 const protect = asyncHandler(async (req, res, next) => {
   let token;
 
-  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith('Bearer ')
+  ) {
     token = req.headers.authorization.split(' ')[1];
   }
 
@@ -15,23 +20,31 @@ const protect = asyncHandler(async (req, res, next) => {
     throw new Error('Not authorized, no token provided');
   }
 
+  let decoded;
+
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id);
-    if (!user) {
-      res.status(401);
-      throw new Error('Not authorized, user no longer exists');
-    }
-    if (user.isDeleted || user.isActive === false) {
-      res.status(401);
-      throw new Error('This account has been deactivated. Please contact an administrator.');
-    }
-    req.user = user;
-    next();
+    decoded = jwt.verify(token, process.env.JWT_SECRET);
   } catch (error) {
     res.status(401);
     throw new Error('Not authorized, token invalid or expired');
   }
+
+  const user = await User.findById(decoded.id);
+
+  if (!user) {
+    res.status(401);
+    throw new Error('Not authorized, user no longer exists');
+  }
+
+  if (user.isDeleted || user.isActive === false) {
+    res.status(401);
+    throw new Error(
+      'This account has been deactivated. Please contact an administrator.'
+    );
+  }
+
+  req.user = user;
+  next();
 });
 
 // Role-based authorization - never rely on hidden UI, always enforce server-side
@@ -39,10 +52,14 @@ const authorize = (...roles) => {
   return (req, res, next) => {
     if (!req.user || !roles.includes(req.user.role)) {
       res.status(403);
-      throw new Error('Forbidden: you do not have permission to perform this action');
+      throw new Error(
+        'Forbidden: you do not have permission to perform this action'
+      );
     }
+
     next();
   };
 };
 
 module.exports = { protect, authorize };
+
