@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import PasswordInput from '../components/PasswordInput';
+import GoogleSignInButton from '../components/GoogleSignInButton';
 
 const FREQUENCY_OPTIONS = [
   'Once per week',
@@ -48,11 +49,30 @@ const STEP_TITLES = [
 ];
 
 const Signup = () => {
-  const { signup } = useAuth();
+  const { signup, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [form, setForm] = useState(initialForm);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+
+  const handleGoogleCredential = async (credential) => {
+    setGoogleLoading(true);
+    try {
+      const user = await loginWithGoogle(credential);
+      if (!user.profileComplete) {
+        toast.success('Account created! Just a few more details.');
+        navigate('/complete-profile');
+      } else {
+        toast.success('Welcome back!');
+        navigate(user.role === 'writer' ? '/admin/articles' : '/');
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Google sign-up failed');
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
 
   const update = (field, value) => setForm((f) => ({ ...f, [field]: value }));
 
@@ -137,6 +157,18 @@ const Signup = () => {
             style={{ width: `${((step + 1) / STEP_TITLES.length) * 100}%` }}
           />
         </div>
+
+        {step === 0 && (
+          <>
+            <GoogleSignInButton onCredential={handleGoogleCredential} text="signup_with" />
+            {googleLoading && <p className="text-xs text-gray-400 text-center mt-2">Setting up your account...</p>}
+            <div className="flex items-center gap-3 my-5">
+              <div className="h-px bg-gray-200 flex-1" />
+              <span className="text-xs text-gray-400 uppercase">or sign up with email</span>
+              <div className="h-px bg-gray-200 flex-1" />
+            </div>
+          </>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {step === 0 && (

@@ -3,9 +3,22 @@ import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import PasswordInput from '../components/PasswordInput';
+import GoogleSignInButton from '../components/GoogleSignInButton';
+
+const routeAfterLogin = (user, navigate) => {
+  if (!user.profileComplete) {
+    // Google sign-up - name/email only so far, finish the rest of the profile first.
+    navigate('/complete-profile');
+  } else if (user.role === 'writer') {
+    navigate('/admin/articles');
+  } else {
+    // Admins land on the public homepage too, same as clients.
+    navigate('/');
+  }
+};
 
 const Login = () => {
-  const { login } = useAuth();
+  const { login, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
   const [form, setForm] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
@@ -16,14 +29,22 @@ const Login = () => {
     try {
       const user = await login(form.email, form.password);
       toast.success('Welcome back!');
-      if (user.role === 'writer') {
-        navigate('/admin/articles');
-      } else {
-        // Admins land on the public homepage too, same as clients.
-        navigate('/');
-      }
+      routeAfterLogin(user, navigate);
     } catch (err) {
       toast.error(err.response?.data?.message || 'Login failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleCredential = async (credential) => {
+    setLoading(true);
+    try {
+      const user = await loginWithGoogle(credential);
+      toast.success('Welcome back!');
+      routeAfterLogin(user, navigate);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Google sign-in failed');
     } finally {
       setLoading(false);
     }
@@ -61,6 +82,14 @@ const Login = () => {
             {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>
+
+        <div className="flex items-center gap-3 my-5">
+          <div className="h-px bg-gray-200 flex-1" />
+          <span className="text-xs text-gray-400 uppercase">or</span>
+          <div className="h-px bg-gray-200 flex-1" />
+        </div>
+
+        <GoogleSignInButton onCredential={handleGoogleCredential} />
 
         <p className="text-sm text-gray-500 mt-6 text-center">
           Don't have an account?{' '}

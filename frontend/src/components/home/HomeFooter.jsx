@@ -5,9 +5,11 @@ import toast from 'react-hot-toast';
 import { subscribeNewsletter } from '../../services/newsletterApi';
 
 const QUICK_LINKS = [
+  { label: 'How to Use', to: '/how-to-use' },
   { label: 'Articles', to: '/articles' },
   { label: 'BMI Calculator', to: '/bmi-calculator' },
   { label: 'Counselling', to: '/appointments' },
+  { label: 'Suggest Improvement', to: '/suggest-improvement' },
   { label: 'About', href: '#why-choose-us' },
   { label: 'Contact', href: '#footer' },
 ];
@@ -142,7 +144,7 @@ const HomeFooter = () => {
 
         {/* Bottom bar */}
         <div className="border-t border-white/10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-xs text-white/50">&copy; {new Date().getFullYear()} Horizon+ Nutrition.</p>
+          <p className="text-xs text-white/50">&copy; {new Date().getFullYear()} HorizonStudio</p>
           <div className="flex items-center gap-6 text-xs text-white/50">
             <Link to="/privacy-policy" className="hover:text-accent-400 transition-colors duration-300">
               Privacy Policy

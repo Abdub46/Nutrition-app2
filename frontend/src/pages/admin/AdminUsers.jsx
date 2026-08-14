@@ -3,6 +3,7 @@ import { Eye, Trash2, X, Upload } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../services/api';
 import { uploadImage } from '../../services/uploadApi';
+import Pagination from '../../components/Pagination';
 
 const AdminUsers = () => {
   const [users, setUsers] = useState([]);
@@ -13,12 +14,17 @@ const AdminUsers = () => {
   const [editForm, setEditForm] = useState({});
   const [saving, setSaving] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalUsers, setTotalUsers] = useState(0);
 
-  const loadUsers = async () => {
+  const loadUsers = async (targetPage = page) => {
     setLoading(true);
     try {
-      const { data } = await api.get('/admin/users');
+      const { data } = await api.get('/admin/users', { params: { page: targetPage } });
       setUsers(data.users);
+      setTotalPages(data.totalPages || 1);
+      setTotalUsers(data.totalUsers ?? data.users.length);
     } catch (err) {
       toast.error('Failed to load users');
     } finally {
@@ -27,8 +33,11 @@ const AdminUsers = () => {
   };
 
   useEffect(() => {
-    loadUsers();
-  }, []);
+    loadUsers(page);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page]);
+
+  const handlePageChange = (nextPage) => setPage(nextPage);
 
   const viewUser = async (id) => {
     setDetailLoading(true);
@@ -60,7 +69,7 @@ const AdminUsers = () => {
       toast.success('User updated');
       setSelected(data.user);
       setEditMode(false);
-      loadUsers();
+      loadUsers(page);
     } catch (err) {
       toast.error(err.response?.data?.message || 'Update failed');
     } finally {
@@ -88,8 +97,14 @@ const AdminUsers = () => {
     try {
       await api.delete(`/admin/users/${id}`);
       toast.success('User deleted');
-      setUsers((prev) => prev.filter((u) => u._id !== id));
       setSelected(null);
+      // Reload current page so counts/pagination stay accurate; if this was
+      // the last row on the last page, step back a page.
+      if (users.length === 1 && page > 1) {
+        setPage(page - 1);
+      } else {
+        loadUsers(page);
+      }
     } catch (err) {
       toast.error(err.response?.data?.message || 'Delete failed');
     }
@@ -99,7 +114,7 @@ const AdminUsers = () => {
     <div className="pt-4 space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-800">User Management</h1>
-        <p className="text-sm text-gray-500">{users.length} registered client(s)</p>
+        <p className="text-sm text-gray-500">{totalUsers} registered client(s)</p>
       </div>
 
       {/* Desktop: full table (unchanged) */}
@@ -145,6 +160,7 @@ const AdminUsers = () => {
             </tbody>
           </table>
         )}
+        {!loading && <Pagination page={page} totalPages={totalPages} onPageChange={handlePageChange} />}
       </div>
 
       {/* Mobile: condensed card list - name, email, View button only */}
@@ -169,6 +185,7 @@ const AdminUsers = () => {
             </div>
           ))
         )}
+        {!loading && <Pagination page={page} totalPages={totalPages} onPageChange={handlePageChange} />}
       </div>
 
       {selected && (

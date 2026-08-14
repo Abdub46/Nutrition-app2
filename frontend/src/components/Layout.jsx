@@ -7,7 +7,7 @@ const Layout = ({ children }) => {
   const { visible: bannerVisible } = useBanner();
 
   return (
-    <div className="min-h-screen flex bg-gray-50">
+    <div className="min-h-screen flex bg-gray-50 dark:bg-gray-950 transition-colors duration-300">
       {/* Site-wide navbar (always solid here - only the public homepage gets the
           transparent-over-hero treatment, via its own direct <HomeNavbar transparentOnTop />).
           Its own mobile row includes the back arrow for every non-home page. */}

@@ -2,12 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import api from '../../services/api';
+import { stripHtml } from '../../utils/stripHtml';
 
 // First two lines of the summary, trailed with "..." to invite a click through to
 // the full article - matches the "two lines + ellipsis" spec exactly rather than
 // relying on a CSS line-clamp (so the "..." is real text, not a clipped overflow).
-const excerptOf = (text = '') => {
-  const words = text.trim().split(/\s+/);
+// Summary is rich text (same editor as content), so tags are stripped first -
+// this excerpt is always plain text.
+const excerptOf = (html = '') => {
+  const words = stripHtml(html).split(/\s+/);
   const short = words.slice(0, 28).join(' ');
   return `${short}...`;
 };

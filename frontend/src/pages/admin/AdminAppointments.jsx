@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import api from '../../services/api';
+import Pagination from '../../components/Pagination';
 
 const STATUS_OPTIONS = ['Pending', 'Approved', 'Completed', 'Cancelled'];
 const STATUS_COLORS = {
@@ -14,12 +15,19 @@ const AdminAppointments = () => {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('');
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalAppointments, setTotalAppointments] = useState(0);
 
-  const load = async (status) => {
+  const load = async (status, targetPage) => {
     setLoading(true);
     try {
-      const { data } = await api.get('/appointments', { params: status ? { status } : {} });
+      const { data } = await api.get('/appointments', {
+        params: { ...(status ? { status } : {}), page: targetPage },
+      });
       setAppointments(data.appointments);
+      setTotalPages(data.totalPages || 1);
+      setTotalAppointments(data.totalAppointments ?? data.appointments.length);
     } catch (err) {
       toast.error('Failed to load appointments');
     } finally {
@@ -27,10 +35,18 @@ const AdminAppointments = () => {
     }
   };
 
+  // Changing the status filter always resets back to page 1.
   useEffect(() => {
-    load(filter);
+    setPage(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter]);
+
+  useEffect(() => {
+    load(filter, page);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filter, page]);
+
+  const handlePageChange = (nextPage) => setPage(nextPage);
 
   const updateStatus = async (id, status) => {
     try {
@@ -47,7 +63,7 @@ const AdminAppointments = () => {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">Appointment Management</h1>
-          <p className="text-sm text-gray-500">{appointments.length} appointment(s)</p>
+          <p className="text-sm text-gray-500">{totalAppointments} appointment(s)</p>
         </div>
         <select className="input-field w-auto" value={filter} onChange={(e) => setFilter(e.target.value)}>
           <option value="">All Statuses</option>
@@ -89,6 +105,7 @@ const AdminAppointments = () => {
             </div>
           ))
         )}
+        {!loading && <Pagination page={page} totalPages={totalPages} onPageChange={handlePageChange} />}
       </div>
     </div>
   );

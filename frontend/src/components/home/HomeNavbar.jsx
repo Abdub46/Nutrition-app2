@@ -7,6 +7,7 @@ import {
 import { useBanner } from '../../context/BannerContext';
 import { useAuth } from '../../context/AuthContext';
 import BackButton from '../BackButton';
+import ThemeToggle from '../ThemeToggle';
 
 // Base links - visible to everyone, logged in or not, on every page.
 const BASE_LINKS = [
@@ -54,20 +55,20 @@ const NavDropdown = ({ label, items, isSolid, onNavigate }) => (
     <button
       type="button"
       className={`flex items-center gap-1 text-sm font-medium transition-colors duration-300 ${
-        isSolid ? 'text-gray-700 hover:text-primary-900' : 'text-white/90 hover:text-white'
+        isSolid ? 'text-gray-700 hover:text-primary-900 dark:text-gray-300 dark:hover:text-white' : 'text-white/90 hover:text-white'
       }`}
     >
       {label}
       <ChevronDown size={14} className="transition-transform duration-200 group-hover:rotate-180" />
     </button>
     <div className="absolute left-1/2 -translate-x-1/2 top-full pt-3 hidden group-hover:block z-50">
-      <div className="bg-white rounded-xl shadow-lg border border-gray-100 py-2 w-56">
+      <div className="bg-white rounded-xl shadow-lg border border-gray-100 py-2 w-56 dark:bg-gray-900 dark:border-gray-800">
         {items.map((item) => (
           <Link
             key={item.to}
             to={item.to}
             onClick={onNavigate}
-            className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary-900 transition-colors"
+            className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary-900 transition-colors dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
           >
             <item.icon size={16} className="text-gray-400" />
             {item.label}
@@ -81,13 +82,13 @@ const NavDropdown = ({ label, items, isSolid, onNavigate }) => (
 // Mobile drawer section - a small uppercase label followed by its indented links.
 const MobileSection = ({ label, items, onNavigate }) => (
   <div className="flex flex-col gap-3 mt-1">
-    <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">{label}</p>
+    <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">{label}</p>
     {items.map((item) => (
       <Link
         key={item.to}
         to={item.to}
         onClick={onNavigate}
-        className="flex items-center gap-2 pl-1 text-base font-medium text-gray-700 hover:text-primary-900"
+        className="flex items-center gap-2 pl-1 text-base font-medium text-gray-700 hover:text-primary-900 dark:text-gray-300 dark:hover:text-white"
       >
         <item.icon size={18} /> {item.label}
       </Link>
@@ -123,27 +124,24 @@ const HomeNavbar = ({ transparentOnTop = false }) => {
     return () => window.removeEventListener('scroll', onScroll);
   }, [transparentOnTop]);
 
-
-
-
   useEffect(() => {
-  if (!mobileOpen) return;
+    if (!mobileOpen) return undefined;
 
-  const handleDocumentClick = (event) => {
-    // Don't close immediately when clicking the hamburger to open it.
-    if (menuButtonRef.current?.contains(event.target)) {
-      return;
-    }
+    const handleDocumentClick = (event) => {
+      // Don't close immediately when clicking the hamburger to open it.
+      if (menuButtonRef.current?.contains(event.target)) {
+        return;
+      }
 
-    setMobileOpen(false);
-  };
+      setMobileOpen(false);
+    };
 
-  document.addEventListener('click', handleDocumentClick);
+    document.addEventListener('click', handleDocumentClick);
 
-  return () => {
-    document.removeEventListener('click', handleDocumentClick);
-  };
-}, [mobileOpen]);
+    return () => {
+      document.removeEventListener('click', handleDocumentClick);
+    };
+  }, [mobileOpen]);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -161,7 +159,9 @@ const HomeNavbar = ({ transparentOnTop = false }) => {
     <header
       id="top"
       className={`fixed left-0 right-0 ${offsetClass} z-40 transition-all duration-500 ${
-        isSolid ? 'bg-white/70 backdrop-blur-xl shadow-sm border-b border-white/60' : 'bg-transparent'
+        isSolid
+          ? 'bg-white/70 backdrop-blur-xl shadow-sm border-b border-white/60 dark:bg-gray-950/80 dark:border-gray-800/80'
+          : 'bg-transparent'
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 md:px-8 flex items-center justify-between h-20">
@@ -173,7 +173,7 @@ const HomeNavbar = ({ transparentOnTop = false }) => {
           <Link to="/" className="flex flex-col leading-none group">
             <span
               className={`text-2xl md:text-3xl font-black uppercase tracking-tight italic transition-colors duration-500 ${
-                isSolid ? 'text-primary-900' : 'text-white'
+                isSolid ? 'text-primary-900 dark:text-white' : 'text-white'
               }`}
               style={{ transform: 'skewX(-6deg)', display: 'inline-block' }}
             >
@@ -181,7 +181,7 @@ const HomeNavbar = ({ transparentOnTop = false }) => {
             </span>
             <span
               className={`text-[9px] md:text-[10px] font-medium uppercase tracking-[0.25em] mt-1 transition-colors duration-500 ${
-                isSolid ? 'text-gray-500' : 'text-white/80'
+                isSolid ? 'text-gray-500 dark:text-gray-400' : 'text-white/80'
               }`}
             >
               Nutrition &bull; Wellness &bull; Lifestyle
@@ -196,7 +196,7 @@ const HomeNavbar = ({ transparentOnTop = false }) => {
               key={link.label}
               to={link.to}
               className={`relative text-sm font-medium transition-colors duration-300 pb-1 group ${
-                isSolid ? 'text-gray-700 hover:text-primary-900' : 'text-white/90 hover:text-white'
+                isSolid ? 'text-gray-700 hover:text-primary-900 dark:text-gray-300 dark:hover:text-white' : 'text-white/90 hover:text-white'
               }`}
             >
               {link.label}
@@ -210,7 +210,7 @@ const HomeNavbar = ({ transparentOnTop = false }) => {
             <Link
               to="/admin/articles"
               className={`relative text-sm font-medium transition-colors duration-300 pb-1 group ${
-                isSolid ? 'text-gray-700 hover:text-primary-900' : 'text-white/90 hover:text-white'
+                isSolid ? 'text-gray-700 hover:text-primary-900 dark:text-gray-300 dark:hover:text-white' : 'text-white/90 hover:text-white'
               }`}
             >
               Add Article
@@ -239,7 +239,9 @@ const HomeNavbar = ({ transparentOnTop = false }) => {
                   onBlur={() => !query && setSearchOpen(false)}
                   placeholder="Search articles..."
                   className={`w-40 lg:w-52 text-sm rounded-full px-4 py-2 border focus:outline-none focus:ring-2 focus:ring-accent-500 transition-all duration-300 ${
-                    isSolid ? 'border-gray-200 bg-white text-gray-700' : 'border-white/30 bg-white/10 text-white placeholder-white/70 backdrop-blur-sm'
+                    isSolid
+                      ? 'border-gray-200 bg-white text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200'
+                      : 'border-white/30 bg-white/10 text-white placeholder-white/70 backdrop-blur-sm'
                   }`}
                 />
               </form>
@@ -248,13 +250,18 @@ const HomeNavbar = ({ transparentOnTop = false }) => {
                 onClick={() => setSearchOpen(true)}
                 aria-label="Search"
                 className={`p-2 rounded-full transition-colors duration-300 ${
-                  isSolid ? 'text-gray-600 hover:bg-gray-100' : 'text-white hover:bg-white/10'
+                  isSolid ? 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800' : 'text-white hover:bg-white/10'
                 }`}
               >
                 <Search size={18} />
               </button>
             )}
           </div>
+
+          {/* Dark mode toggle - always visible, same slide-pop chrome as the rest of the nav */}
+          <ThemeToggle
+            className={isSolid ? 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800' : 'text-white hover:bg-white/10'}
+          />
 
           <a
             href="#newsletter"
@@ -268,7 +275,7 @@ const HomeNavbar = ({ transparentOnTop = false }) => {
             <button
               onClick={handleLogout}
               className={`hidden lg:inline-flex items-center gap-1.5 text-sm font-medium transition-colors duration-300 ${
-                isSolid ? 'text-gray-600 hover:text-red-600' : 'text-white/90 hover:text-white'
+                isSolid ? 'text-gray-600 hover:text-red-600 dark:text-gray-300 dark:hover:text-red-400' : 'text-white/90 hover:text-white'
               }`}
             >
               <LogOut size={16} /> Logout
@@ -277,7 +284,7 @@ const HomeNavbar = ({ transparentOnTop = false }) => {
             <Link
               to="/login"
               className={`hidden lg:inline-flex items-center text-sm font-medium transition-colors duration-300 ${
-                isSolid ? 'text-gray-700 hover:text-primary-900' : 'text-white/90 hover:text-white'
+                isSolid ? 'text-gray-700 hover:text-primary-900 dark:text-gray-300 dark:hover:text-white' : 'text-white/90 hover:text-white'
               }`}
             >
               Login
@@ -285,11 +292,11 @@ const HomeNavbar = ({ transparentOnTop = false }) => {
           )}
 
           <button
-  ref={menuButtonRef}
-  onClick={() => setMobileOpen(true)}
+            ref={menuButtonRef}
+            onClick={() => setMobileOpen(true)}
             aria-label="Open menu"
             className={`lg:hidden p-2 rounded-full transition-colors duration-300 ${
-              isSolid ? 'text-primary-900 hover:bg-gray-100' : 'text-white hover:bg-white/10'
+              isSolid ? 'text-primary-900 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-800' : 'text-white hover:bg-white/10'
             }`}
           >
             <Menu size={22} />
@@ -298,52 +305,28 @@ const HomeNavbar = ({ transparentOnTop = false }) => {
       </div>
 
       {/* Mobile drawer */}
-{mobileOpen && (
- <div
-  className="lg:hidden fixed inset-0 z-50 bg-black/40 flex justify-end"
-  
->
- <div
-  className="bg-white w-72 h-screen shadow-xl flex flex-col animate-[fadeIn_0.2s_ease-out]"
-  
->
-            <div className="px-6 pt-6 pb-5 flex items-center justify-between border-b border-gray-100">
-              <span className="text-xl font-black uppercase italic text-primary-900" style={{ transform: 'skewX(-6deg)', display: 'inline-block' }}>
+      {mobileOpen && (
+        <div className="lg:hidden fixed inset-0 z-50 bg-black/40 flex justify-end">
+          <div className="bg-white w-72 h-screen shadow-xl flex flex-col animate-[fadeIn_0.2s_ease-out] dark:bg-gray-950">
+            <div className="px-6 pt-6 pb-5 flex items-center justify-between border-b border-gray-100 dark:border-gray-800">
+              <span className="text-xl font-black uppercase italic text-primary-900 dark:text-white" style={{ transform: 'skewX(-6deg)', display: 'inline-block' }}>
                 HORIZON<span className="text-accent-500 not-italic">+</span>
               </span>
-              <button onClick={closeMobile} aria-label="Close menu">
-                <X size={20} className="text-gray-500" />
-              </button>
+              <div className="flex items-center gap-1">
+                <ThemeToggle className="text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800" />
+                <button onClick={closeMobile} aria-label="Close menu">
+                  <X size={20} className="text-gray-500 dark:text-gray-400" />
+                </button>
+              </div>
             </div>
 
-
-
-
-
-
-
-
-
-  <nav
-  className="flex-1 overflow-y-auto px-6 py-6 flex flex-col gap-5"
-  onClick={closeMobile}
->
-
-
-
-
-
-
-
-
-
-
+            <nav className="flex-1 overflow-y-auto px-6 py-6 flex flex-col gap-5" onClick={closeMobile}>
               {BASE_LINKS.map((link) => (
                 <Link
                   key={link.label}
                   to={link.to}
                   onClick={closeMobile}
-                  className="text-base font-medium text-gray-700 hover:text-primary-900"
+                  className="text-base font-medium text-gray-700 hover:text-primary-900 dark:text-gray-300 dark:hover:text-white"
                 >
                   {link.label}
                 </Link>
@@ -351,14 +334,14 @@ const HomeNavbar = ({ transparentOnTop = false }) => {
 
               {user && (
                 <>
-                  <div className="border-t border-gray-100 my-1" />
+                  <div className="border-t border-gray-100 my-1 dark:border-gray-800" />
                   <MobileSection label="My Portal" items={portalItems} onNavigate={closeMobile} />
 
                   {user.role === 'writer' && (
                     <Link
                       to="/admin/articles"
                       onClick={closeMobile}
-                      className="flex items-center gap-2 text-base font-medium text-gray-700 hover:text-primary-900 mt-1"
+                      className="flex items-center gap-2 text-base font-medium text-gray-700 hover:text-primary-900 mt-1 dark:text-gray-300 dark:hover:text-white"
                     >
                       <PenSquare size={18} /> Add Article
                     </Link>
@@ -371,10 +354,10 @@ const HomeNavbar = ({ transparentOnTop = false }) => {
                     </>
                   )}
 
-                  <div className="border-t border-gray-100 my-1" />
+                  <div className="border-t border-gray-100 my-1 dark:border-gray-800" />
                   <button
                     onClick={handleLogout}
-                    className="flex items-center gap-2 text-base font-medium text-red-600 hover:text-red-700"
+                    className="flex items-center gap-2 text-base font-medium text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
                   >
                     <LogOut size={18} /> Logout
                   </button>
@@ -383,11 +366,11 @@ const HomeNavbar = ({ transparentOnTop = false }) => {
 
               {!user && (
                 <>
-                  <div className="border-t border-gray-100 my-1" />
-                  <Link to="/login" onClick={closeMobile} className="text-base font-medium text-gray-700 hover:text-primary-900">
+                  <div className="border-t border-gray-100 my-1 dark:border-gray-800" />
+                  <Link to="/login" onClick={closeMobile} className="text-base font-medium text-gray-700 hover:text-primary-900 dark:text-gray-300 dark:hover:text-white">
                     Login
                   </Link>
-                  <Link to="/signup" onClick={closeMobile} className="text-base font-medium text-gray-700 hover:text-primary-900">
+                  <Link to="/signup" onClick={closeMobile} className="text-base font-medium text-gray-700 hover:text-primary-900 dark:text-gray-300 dark:hover:text-white">
                     Sign Up
                   </Link>
                 </>
@@ -403,9 +386,6 @@ const HomeNavbar = ({ transparentOnTop = false }) => {
           </div>
         </div>
       )}
-
-
-
     </header>
   );
 };

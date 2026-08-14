@@ -14,6 +14,14 @@ body {
     linear-gradient(to bottom, rgba(15, 23, 42, 0.035) 1px, transparent 1px);
   background-size: 36px 36px;
   background-attachment: fixed;
+  @apply bg-gray-50 text-gray-800 transition-colors duration-300;
+}
+
+.dark body {
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  @apply bg-gray-950 text-gray-200;
 }
 
 /* The premium homepage relies on generous white space, so the grid pattern is
@@ -52,6 +60,7 @@ body.home-no-grid {
 
 .card {
   @apply bg-white/70 backdrop-blur-md rounded-xl shadow-sm border border-white/60 p-5;
+  @apply dark:bg-gray-900/70 dark:border-gray-800/80 dark:shadow-none;
 }
 
 .article-content p {
@@ -59,7 +68,7 @@ body.home-no-grid {
 }
 
 .article-content a:not(.btn-primary) {
-  @apply text-primary-600 underline;
+  @apply text-primary-600 underline dark:text-primary-300;
 }
 
 .article-content a.btn-primary {
@@ -67,7 +76,7 @@ body.home-no-grid {
 }
 
 .article-content strong {
-  @apply font-semibold text-gray-800;
+  @apply font-semibold text-gray-800 dark:text-gray-100;
 }
 
 .article-content ul, .article-content ol {
@@ -82,19 +91,59 @@ body.home-no-grid {
   @apply list-decimal;
 }
 
+.article-content h2 {
+  @apply text-xl font-bold text-gray-800 mt-6 mb-3 dark:text-gray-100;
+}
+
+.article-content h3 {
+  @apply text-lg font-bold text-gray-800 mt-5 mb-2 dark:text-gray-100;
+}
+
+.article-content h4 {
+  @apply text-base font-bold text-gray-800 mt-4 mb-2 dark:text-gray-100;
+}
+
+.article-content blockquote {
+  @apply border-l-4 border-primary-200 pl-4 italic text-gray-600 my-4 dark:border-primary-700 dark:text-gray-400;
+}
+
+.article-content s, .article-content strike {
+  @apply text-gray-500 dark:text-gray-500;
+}
+
+/* Rich-text editor (admin/writer "Add Article" form) - reuses .article-content
+   typography above so what you type looks like what readers will see. */
+.rich-text-editable {
+  @apply bg-white dark:bg-gray-900 dark:text-gray-100;
+}
+
+.rich-text-editable:empty::before {
+  content: attr(data-placeholder);
+  @apply text-gray-400 pointer-events-none dark:text-gray-600;
+}
+
+.rich-text-editable h2:first-child,
+.rich-text-editable h3:first-child,
+.rich-text-editable h4:first-child,
+.rich-text-editable p:first-child {
+  @apply mt-0;
+}
+
 .btn-primary {
   @apply bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
 }
 
 .btn-secondary {
   @apply bg-white hover:bg-primary-50 text-primary-700 font-medium py-2 px-4 rounded-lg border border-primary-600 transition-colors;
+  @apply dark:bg-gray-900 dark:hover:bg-gray-800 dark:text-primary-300 dark:border-primary-400;
 }
 
 .input-field {
   @apply w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm;
+  @apply dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 dark:placeholder-gray-500;
 }
 
 .label-text {
-  @apply block text-sm font-medium text-gray-700 mb-1;
+  @apply block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300;
 }
 

@@ -6,6 +6,8 @@ import { getArticleCategories, createArticleCategory } from '../../services/arti
 import { getSubcategories } from '../../services/subcategoryApi';
 import { uploadImage } from '../../services/uploadApi';
 import { useAuth } from '../../context/AuthContext';
+import RichTextEditor from '../../components/RichTextEditor';
+import { stripHtml } from '../../utils/stripHtml';
 
 const emptyForm = { title: '', summary: '', content: '', featuredImage: '', category: '', subcategory: '', status: 'Published' };
 
@@ -26,8 +28,8 @@ const AdminArticles = () => {
   const [newCategoryName, setNewCategoryName] = useState('');
   const [addingCategory, setAddingCategory] = useState(false);
 
-  // Rich content insert toolbar
-  const contentRef = useRef(null);
+  // Rich content insert toolbar (Button / Link Block / External Link snippets)
+  const contentEditorRef = useRef(null);
   const [insertMode, setInsertMode] = useState(null); // 'button' | 'link' | 'external'
   const [insertLabel, setInsertLabel] = useState('');
   const [insertUrl, setInsertUrl] = useState('');
@@ -84,6 +86,14 @@ const AdminArticles = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!stripHtml(form.summary)) {
+      toast.error('Summary is required');
+      return;
+    }
+    if (!stripHtml(form.content)) {
+      toast.error('Content is required');
+      return;
+    }
     setSaving(true);
     try {
       if (editingId) {
@@ -144,21 +154,15 @@ const AdminArticles = () => {
     }
   };
 
-  // Insert an HTML snippet into the content textarea at the current cursor position
+  // Insert an HTML snippet into the content editor at the current cursor position
   const insertSnippet = (snippet) => {
-    const textarea = contentRef.current;
-    if (!textarea) {
+    if (contentEditorRef.current) {
+      contentEditorRef.current.insertHtml(snippet);
+      // insertHtml() calls onChange() itself (which updates form.content), so
+      // form state stays in sync without us touching it here.
+    } else {
       setForm((f) => ({ ...f, content: f.content + snippet }));
-      return;
     }
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    setForm((f) => ({ ...f, content: f.content.slice(0, start) + snippet + f.content.slice(end) }));
-    requestAnimationFrame(() => {
-      textarea.focus();
-      const cursor = start + snippet.length;
-      textarea.setSelectionRange(cursor, cursor);
-    });
   };
 
   const confirmInsert = () => {
@@ -215,7 +219,7 @@ const AdminArticles = () => {
                   </span>
                 </div>
                 <h3 className="font-semibold text-gray-800 mb-1 line-clamp-1">{a.title}</h3>
-                <p className="text-sm text-gray-500 line-clamp-2 mb-2">{a.summary}</p>
+                <p className="text-sm text-gray-500 line-clamp-2 mb-2">{stripHtml(a.summary)}</p>
                 {isAdmin && a.author && (
                   <p className="text-xs text-gray-400 mb-3">By {a.author.fullName}</p>
                 )}
@@ -317,7 +321,12 @@ const AdminArticles = () => {
 
               <div>
                 <label className="label-text">Summary</label>
-                <textarea required maxLength={500} className="input-field" rows={2} value={form.summary} onChange={(e) => setForm({ ...form, summary: e.target.value })} />
+                <RichTextEditor
+                  initialValue={form.summary}
+                  onChange={(html) => setForm((f) => ({ ...f, summary: html }))}
+                  placeholder="Short summary shown on article cards and previews..."
+                  minHeight={70}
+                />
               </div>
 
               <div>
@@ -359,16 +368,15 @@ const AdminArticles = () => {
                   </div>
                 )}
 
-                <textarea
-                  ref={contentRef}
-                  required
-                  className="input-field font-mono text-sm"
-                  rows={10}
-                  value={form.content}
-                  onChange={(e) => setForm({ ...form, content: e.target.value })}
+                <RichTextEditor
+                  ref={contentEditorRef}
+                  initialValue={form.content}
+                  onChange={(html) => setForm((f) => ({ ...f, content: html }))}
+                  placeholder="Write your article..."
+                  minHeight={220}
                 />
                 <p className="text-xs text-gray-400 mt-1">
-                  Content supports basic HTML (paragraphs, bold, links, and the buttons inserted above). It's sanitized against an allowlist of safe tags before saving.
+                  Formatting is sanitized against an allowlist of safe tags before saving.
                 </p>
               </div>
 

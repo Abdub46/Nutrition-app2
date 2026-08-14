@@ -2,18 +2,31 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import api from '../services/api';
+import Pagination from '../components/Pagination';
+import { stripHtml } from '../utils/stripHtml';
 
 const Articles = () => {
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
+    setLoading(true);
     api
-      .get('/articles')
-      .then(({ data }) => setArticles(data.articles))
+      .get('/articles', { params: { page } })
+      .then(({ data }) => {
+        setArticles(data.articles);
+        setTotalPages(data.totalPages || 1);
+      })
       .catch(() => toast.error('Failed to load articles'))
       .finally(() => setLoading(false));
-  }, []);
+  }, [page]);
+
+  const handlePageChange = (nextPage) => {
+    setPage(nextPage);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   return (
     <div className="pt-4 space-y-6">
@@ -42,7 +55,7 @@ const Articles = () => {
                   </span>
                 )}
                 <h3 className="font-semibold text-gray-800 mb-1 line-clamp-2">{a.title}</h3>
-                <p className="text-sm text-gray-500 line-clamp-2 mb-2">{a.summary}</p>
+                <p className="text-sm text-gray-500 line-clamp-2 mb-2">{stripHtml(a.summary)}</p>
                 <p className="text-xs text-gray-400">
                   Updated: {new Date(a.updatedAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
                 </p>
@@ -50,6 +63,10 @@ const Articles = () => {
             </Link>
           ))}
         </div>
+      )}
+
+      {!loading && articles.length > 0 && (
+        <Pagination page={page} totalPages={totalPages} onPageChange={handlePageChange} />
       )}
     </div>
   );

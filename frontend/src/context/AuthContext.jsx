@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import api from '../services/api';
 
@@ -62,6 +61,16 @@ export const AuthProvider = ({ children }) => {
     return data.user;
   };
 
+  const loginWithGoogle = async (credential) => {
+    const { data } = await api.post('/auth/google', { credential });
+
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('user', JSON.stringify(data.user));
+    setUser(data.user);
+
+    return data.user;
+  };
+
   const signup = async (payload) => {
     const { data } = await api.post('/auth/signup', payload);
 
@@ -93,6 +102,7 @@ export const AuthProvider = ({ children }) => {
         user,
         loading,
         login,
+        loginWithGoogle,
         signup,
         logout,
         refreshUser,

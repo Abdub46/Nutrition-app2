@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Search, Facebook, Instagram, Linkedin, Twitter, MessageCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { subscribeNewsletter } from '../../services/newsletterApi';
+import { stripHtml } from '../../utils/stripHtml';
 
 const ArticleSidebar = ({
   articles = [],
@@ -21,7 +22,7 @@ const ArticleSidebar = ({
         const q = query.toLowerCase();
         return (
           a.title.toLowerCase().includes(q) ||
-          (a.summary || '').toLowerCase().includes(q) ||
+          (stripHtml(a.summary).toLowerCase()).includes(q) ||
           (a.category?.name || '').toLowerCase().includes(q)
         );
       })

@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import TopBanner from './components/TopBanner';
 import NetworkStatus from './components/NetworkStatus';
+import PageViewTracker from './components/PageViewTracker';
 
 import { useAuth } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -12,6 +13,7 @@ import Layout from './components/Layout';
 
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import CompleteProfile from './pages/CompleteProfile';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import Dashboard from './pages/Dashboard';
@@ -22,6 +24,8 @@ import Articles from './pages/Articles';
 import ArticleDetail from './pages/ArticleDetail';
 import Tools from './pages/Tools';
 import Home from './pages/Home';
+import SuggestImprovement from './pages/SuggestImprovement';
+import HowToUse from './pages/HowToUse';
 
 import AdminHome from './pages/admin/AdminHome';
 import AdminUsers from './pages/admin/AdminUsers';
@@ -54,6 +58,7 @@ function App() {
     <>
       <TopBanner />
       <NetworkStatus />
+      <PageViewTracker />
       <Toaster position="top-right" toastOptions={{ duration: 3500 }} />
       <Routes>
         {/* Public homepage - client-facing only, no admin/writer branding or links */}
@@ -66,11 +71,13 @@ function App() {
           path="/signup"
           element={user ? <Navigate to={homeRouteFor(user)} /> : <Signup />}
         />
+        <Route path="/complete-profile" element={<ProtectedRoute><CompleteProfile /></ProtectedRoute>} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password/:token" element={<ResetPassword />} />
 
         {/* Public content page - visible before login/signup too */}
         <Route path="/tools" element={withLayout(Tools)} />
+        <Route path="/how-to-use" element={withLayout(HowToUse)} />
 
         {/* Client routes */}
         <Route path="/dashboard" element={<ProtectedRoute>{withLayout(Dashboard)}</ProtectedRoute>} />
@@ -79,6 +86,7 @@ function App() {
         <Route path="/appointments" element={<ProtectedRoute>{withLayout(Appointments)}</ProtectedRoute>} />
         <Route path="/articles" element={<ProtectedRoute>{withLayout(Articles)}</ProtectedRoute>} />
         <Route path="/articles/:id" element={<ProtectedRoute>{withLayout(ArticleDetail)}</ProtectedRoute>} />
+        <Route path="/suggest-improvement" element={<ProtectedRoute>{withLayout(SuggestImprovement)}</ProtectedRoute>} />
 
         {/* Shared admin + writer routes - article management, ownership enforced server-side */}
         <Route path="/admin/articles" element={<RoleRoute roles={['admin', 'writer']}>{withLayout(AdminArticles)}</RoleRoute>} />

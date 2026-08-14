@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Star, StarOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../services/api';
+import { stripHtml } from '../../utils/stripHtml';
 
 // Admin-only - deliberately kept out of the regular Add Article flow (AdminArticles.jsx)
 // so a writer can author articles but can never make one the homepage featured pick.
@@ -103,7 +104,7 @@ const AdminFeaturedArticle = () => {
                     )}
                   </div>
                   <h3 className="font-semibold text-gray-800 mb-1 line-clamp-1">{a.title}</h3>
-                  <p className="text-sm text-gray-500 line-clamp-2 mb-3">{a.summary}</p>
+                  <p className="text-sm text-gray-500 line-clamp-2 mb-3">{stripHtml(a.summary)}</p>
                   {isFeatured ? (
                     <p className="text-xs text-accent-600 font-medium">Currently featured on the homepage</p>
                   ) : (
