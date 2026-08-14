@@ -10,9 +10,12 @@ const frequencyEnum = [
 ];
 
 // Client-specific fields (nutrition profile) are only required for the 'client' role -
-// writers and admins are staff accounts and don't need this health data.
+// writers and admins are staff accounts and don't need this health data. Also skipped
+// while profileComplete is false, which covers the brief window between a Google
+// sign-up (name/email only, from Google) and the "complete your profile" step where
+// the rest of this data is collected.
 const requiredIfClient = function () {
-  return this.role === 'client';
+  return this.role === 'client' && this.profileComplete !== false;
 };
 
 const userSchema = new mongoose.Schema(
@@ -27,7 +30,15 @@ const userSchema = new mongoose.Schema(
       trim: true,
       match: [/^\S+@\S+\.\S+$/, 'Please provide a valid email address'],
     },
-    password: { type: String, required: true, minlength: 8, select: false },
+    // Not required for Google-authenticated accounts, which never set a local password.
+    password: {
+      type: String,
+      required: function () {
+        return this.authProvider !== 'google';
+      },
+      minlength: 8,
+      select: false,
+    },
     phone: { type: String, required: requiredIfClient, trim: true },
     dateOfBirth: { type: Date, required: requiredIfClient },
     sex: { type: String, enum: ['Male', 'Female'], required: requiredIfClient },
@@ -58,6 +69,14 @@ const userSchema = new mongoose.Schema(
     physicalActivity: { type: Boolean, default: false },
     drugUse: { type: Boolean, default: false },
     drugUseDetails: { type: String, default: '' },
+
+    // Google Sign-In
+    googleId: { type: String, unique: true, sparse: true }, // Google's stable "sub" claim; sparse so local accounts (null) don't collide
+    authProvider: { type: String, enum: ['local', 'google'], default: 'local' },
+    // False right after a Google sign-up creates the account (Google only gives us
+    // name/email) until the client finishes the "complete your profile" form.
+    // Always true for password signups, which collect everything up front.
+    profileComplete: { type: Boolean, default: true },
 
     // Role-based access control
     role: { type: String, enum: ['client', 'admin', 'writer'], default: 'client' },

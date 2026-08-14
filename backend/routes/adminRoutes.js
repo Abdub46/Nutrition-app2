@@ -6,6 +6,7 @@ const {
   deleteUser,
   getAnalytics,
 } = require('../controllers/adminController');
+const { getPerformanceAnalytics } = require('../controllers/analyticsController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
 const router = express.Router();
@@ -18,5 +19,6 @@ router.get('/users/:id', getUserById);
 router.put('/users/:id', updateUser);
 router.delete('/users/:id', deleteUser);
 router.get('/analytics', getAnalytics);
+router.get('/analytics/performance', getPerformanceAnalytics);
 
 module.exports = router;

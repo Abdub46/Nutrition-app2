@@ -3,11 +3,23 @@ const User = require('../models/User');
 const Appointment = require('../models/Appointment');
 const { calculateBMI, getBMICategory } = require('../utils/bmiUtils');
 
-// @desc    Get all users (table view) - admin only
-// @route   GET /api/admin/users
+const DEFAULT_USERS_PAGE_SIZE = 20;
+const MAX_USERS_PAGE_SIZE = 100;
+
+// @desc    Get all users (table view) - admin only, paginated
+// @route   GET /api/admin/users?page=&limit=
 // @access  Private (admin)
 const getUsers = asyncHandler(async (req, res) => {
-  const users = await User.find({ role: 'client' }).sort({ createdAt: -1 });
+  const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+  const limit = Math.min(MAX_USERS_PAGE_SIZE, Math.max(1, parseInt(req.query.limit, 10) || DEFAULT_USERS_PAGE_SIZE));
+  const skip = (page - 1) * limit;
+
+  const filter = { role: 'client' };
+  const [users, totalUsers] = await Promise.all([
+    User.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit),
+    User.countDocuments(filter),
+  ]);
+
   const shaped = users.map((u) => ({
     _id: u._id,
     fullName: u.fullName,
@@ -19,7 +31,14 @@ const getUsers = asyncHandler(async (req, res) => {
     bmiCategory: getBMICategory(calculateBMI(u.height, u.weight)),
     registrationDate: u.createdAt,
   }));
-  res.json({ success: true, users: shaped });
+
+  res.json({
+    success: true,
+    users: shaped,
+    page,
+    totalPages: Math.max(1, Math.ceil(totalUsers / limit)),
+    totalUsers,
+  });
 });
 
 // @desc    Get single user detail - admin only

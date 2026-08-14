@@ -1,5 +1,6 @@
 const crypto = require('crypto');
 const asyncHandler = require('express-async-handler');
+const { OAuth2Client } = require('google-auth-library');
 const User = require('../models/User');
 const BmiRecord = require('../models/BmiRecord');
 const generateToken = require('../utils/generateToken');
@@ -7,6 +8,10 @@ const { calculateBMI, getBMICategory } = require('../utils/bmiUtils');
 const { isValidKenyanPhone, isDOBValid, isHeightValid, isWeightValid } = require('../utils/validators');
 const { isStrongPassword, STRONG_PASSWORD_MESSAGE } = require('../utils/passwordValidator');
 const { sendEmail } = require('../services/emailService');
+
+// Reused across requests - verifyIdToken() itself is stateless/per-call, this just
+// avoids re-reading process.env.GOOGLE_CLIENT_ID on every login.
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 // @desc    Register a new client user
 // @route   POST /api/auth/signup
@@ -169,11 +174,192 @@ const login = asyncHandler(async (req, res) => {
   });
 });
 
+// @desc    Login or sign up using a Google ID token from Google Identity Services
+// @route   POST /api/auth/google
+// @access  Public
+const googleAuth = asyncHandler(async (req, res) => {
+  const { credential } = req.body;
+  if (!credential) {
+    res.status(400);
+    throw new Error('Google credential is required');
+  }
+  if (!process.env.GOOGLE_CLIENT_ID) {
+    res.status(500);
+    throw new Error('Google sign-in is not configured on this server');
+  }
+
+  let payload;
+  try {
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    payload = ticket.getPayload();
+  } catch (err) {
+    res.status(401);
+    throw new Error('Invalid Google credential');
+  }
+
+  if (!payload?.email || !payload.email_verified) {
+    res.status(401);
+    throw new Error('Google account email is not verified');
+  }
+
+  const email = payload.email.toLowerCase();
+  let user = await User.findOne({ googleId: payload.sub });
+
+  if (!user) {
+    user = await User.findOne({ email });
+
+    if (user) {
+      // Account already exists (e.g. originally signed up with a password) -
+      // link Google as an additional login method. Google has already verified
+      // this email address, so this link is safe to make automatically.
+      user.googleId = payload.sub;
+      if (!user.avatar && payload.picture) user.avatar = payload.picture;
+      await user.save({ validateBeforeSave: false });
+    } else {
+      // Brand new account. Google only gives us name/email/picture, so the rest
+      // of the nutrition profile is collected afterwards via completeProfile().
+      user = await User.create({
+        fullName: payload.name || email.split('@')[0],
+        email,
+        googleId: payload.sub,
+        authProvider: 'google',
+        avatar: payload.picture || '',
+        role: 'client',
+        profileComplete: false,
+      });
+    }
+  }
+
+  if (user.isDeleted || user.isActive === false) {
+    res.status(403);
+    throw new Error('This account has been deactivated. Please contact an administrator.');
+  }
+
+  user.lastLogin = new Date();
+  await user.save({ validateBeforeSave: false });
+
+  res.json({
+    success: true,
+    token: generateToken(user._id, user.role),
+    user: sanitizeUser(user),
+  });
+});
+
 // @desc    Get current logged-in user's profile
 // @route   GET /api/auth/me
 // @access  Private
 const getMe = asyncHandler(async (req, res) => {
   res.json({ success: true, user: sanitizeUser(req.user) });
+});
+
+// @desc    Fill in the nutrition profile fields Google sign-up doesn't collect
+//          (phone, DOB, body measurements, medical/dietary/lifestyle info)
+// @route   PUT /api/auth/complete-profile
+// @access  Private
+const completeProfile = asyncHandler(async (req, res) => {
+  const {
+    phone,
+    dateOfBirth,
+    sex,
+    occupation,
+    county,
+    residenceTown,
+    height,
+    weight,
+    hasCurrentMedicalCondition,
+    currentMedicalConditionDetails,
+    hasFamilyMedicalHistory,
+    familyMedicalHistoryDetails,
+    balancedDietFrequency,
+    fruitVegFrequency,
+    fastFoodFrequency,
+    mealsPerDay,
+    physicalActivity,
+    drugUse,
+    drugUseDetails,
+  } = req.body;
+
+  const requiredFields = {
+    phone,
+    dateOfBirth,
+    sex,
+    occupation,
+    county,
+    residenceTown,
+    height,
+    weight,
+    balancedDietFrequency,
+    fruitVegFrequency,
+    fastFoodFrequency,
+    mealsPerDay,
+  };
+  for (const [key, value] of Object.entries(requiredFields)) {
+    if (value === undefined || value === null || value === '') {
+      res.status(400);
+      throw new Error(`${key} is required`);
+    }
+  }
+
+  if (!isValidKenyanPhone(phone)) {
+    res.status(400);
+    throw new Error('Please provide a valid Kenyan phone number');
+  }
+  if (!isDOBValid(dateOfBirth)) {
+    res.status(400);
+    throw new Error('Date of birth cannot be in the future');
+  }
+  if (!isHeightValid(Number(height))) {
+    res.status(400);
+    throw new Error('Height must be between 50cm and 250cm');
+  }
+  if (!isWeightValid(Number(weight))) {
+    res.status(400);
+    throw new Error('Weight must be between 10kg and 400kg');
+  }
+
+  const user = req.user;
+  user.phone = phone;
+  user.dateOfBirth = dateOfBirth;
+  user.sex = sex;
+  user.occupation = occupation;
+  user.county = county;
+  user.residenceTown = residenceTown;
+  user.height = Number(height);
+  user.weight = Number(weight);
+  user.hasCurrentMedicalCondition = !!hasCurrentMedicalCondition;
+  user.currentMedicalConditionDetails = hasCurrentMedicalCondition ? currentMedicalConditionDetails : '';
+  user.hasFamilyMedicalHistory = !!hasFamilyMedicalHistory;
+  user.familyMedicalHistoryDetails = hasFamilyMedicalHistory ? familyMedicalHistoryDetails : '';
+  user.balancedDietFrequency = balancedDietFrequency;
+  user.fruitVegFrequency = fruitVegFrequency;
+  user.fastFoodFrequency = fastFoodFrequency;
+  user.mealsPerDay = mealsPerDay;
+  user.physicalActivity = !!physicalActivity;
+  user.drugUse = !!drugUse;
+  user.drugUseDetails = drugUse ? drugUseDetails : '';
+  user.profileComplete = true;
+
+  await user.save();
+
+  // Create the first BMI record now that height/weight are known, mirroring what
+  // signup() does for password-based accounts - only if one doesn't exist yet,
+  // since re-submitting this form shouldn't create duplicate history entries.
+  const existingBmiRecord = await BmiRecord.findOne({ user: user._id });
+  if (!existingBmiRecord) {
+    const bmi = calculateBMI(user.height, user.weight);
+    await BmiRecord.create({
+      user: user._id,
+      height: user.height,
+      weight: user.weight,
+      bmi,
+      category: getBMICategory(bmi),
+    });
+  }
+
+  res.json({ success: true, user: sanitizeUser(user) });
 });
 
 // @desc    Forgot password - generate reset token & email it
@@ -258,4 +444,4 @@ const sanitizeUser = (user) => {
   return obj;
 };
 
-module.exports = { signup, login, getMe, forgotPassword, resetPassword };
+module.exports = { signup, login, googleAuth, getMe, completeProfile, forgotPassword, resetPassword };

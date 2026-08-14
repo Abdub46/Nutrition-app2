@@ -8,6 +8,7 @@ const connectDB = require('./config/db');
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 const { apiLimiter } = require('./middleware/rateLimitMiddleware');
 const { startKeepAlive } = require('./services/keepAliveService');
+const { getHealth } = require('./controllers/healthController');
 
 const authRoutes = require('./routes/authRoutes');
 const bmiRoutes = require('./routes/bmiRoutes');
@@ -23,6 +24,9 @@ const articleCategoryRoutes = require('./routes/articleCategoryRoutes');
 const subcategoryRoutes = require('./routes/subcategoryRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
 const writerRoutes = require('./routes/writerRoutes');
+const suggestionRoutes = require('./routes/suggestionRoutes');
+const analyticsRoutes = require('./routes/analyticsRoutes');
+const commentRoutes = require('./routes/commentRoutes');
 
 connectDB();
 
@@ -44,8 +48,8 @@ if (process.env.NODE_ENV !== 'production') {
 }
 app.use('/api', apiLimiter);
 
-// Health check
-app.get('/api/health', (req, res) => res.json({ success: true, message: 'API is running' }));
+// Health check - see controllers/healthController.js for what it actually verifies
+app.get('/api/health', getHealth);
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -62,6 +66,9 @@ app.use('/api/article-categories', articleCategoryRoutes);
 app.use('/api/subcategories', subcategoryRoutes);
 app.use('/api/uploads', uploadRoutes);
 app.use('/api/writers', writerRoutes);
+app.use('/api/suggestions', suggestionRoutes);
+app.use('/api/analytics', analyticsRoutes);
+app.use('/api/comments', commentRoutes);
 
 // 404 + error handler (must be last)
 app.use(notFound);

@@ -7,28 +7,54 @@ const POPULATE_AUTHOR = 'fullName avatar bio';
 const POPULATE_CATEGORY = 'name slug';
 const POPULATE_SUBCATEGORY = 'name slug';
 
-const PUBLIC_LIST_CACHE_KEY = 'articles:public';
+const PUBLIC_LIST_CACHE_PREFIX = 'articles:public';
 const SINGLE_ARTICLE_CACHE_PREFIX = 'article:';
 const FEATURED_CACHE_KEY = 'articles:featured';
 const CACHE_TTL_MS = 60 * 1000; // 1 min - public listing/detail pages, hit far more than articles change
 
-// @desc    Get all PUBLISHED articles (public card listing)
-// @route   GET /api/articles
+const DEFAULT_PAGE_SIZE = 12;
+const MAX_PAGE_SIZE = 50;
+
+// Clamps/validates page & limit query params into safe positive integers.
+const parsePagination = (query, defaultLimit) => {
+  const page = Math.max(1, parseInt(query.page, 10) || 1);
+  const limit = Math.min(MAX_PAGE_SIZE, Math.max(1, parseInt(query.limit, 10) || defaultLimit));
+  return { page, limit, skip: (page - 1) * limit };
+};
+
+// @desc    Get all PUBLISHED articles (public card listing), paginated
+// @route   GET /api/articles?page=&limit=
 // @access  Public
 const getArticles = asyncHandler(async (req, res) => {
-  const cached = cache.get(PUBLIC_LIST_CACHE_KEY);
+  const { page, limit, skip } = parsePagination(req.query, DEFAULT_PAGE_SIZE);
+  const cacheKey = `${PUBLIC_LIST_CACHE_PREFIX}:page=${page}:limit=${limit}`;
+
+  const cached = cache.get(cacheKey);
   if (cached) {
-    return res.json({ success: true, articles: cached });
+    return res.json({ success: true, ...cached });
   }
 
-  const articles = await Article.find({ status: 'Published' })
-    .populate('author', POPULATE_AUTHOR)
-    .populate('category', POPULATE_CATEGORY)
-    .populate('subcategory', POPULATE_SUBCATEGORY)
-    .sort({ publishedAt: -1 });
+  const filter = { status: 'Published' };
+  const [articles, totalArticles] = await Promise.all([
+    Article.find(filter)
+      .populate('author', POPULATE_AUTHOR)
+      .populate('category', POPULATE_CATEGORY)
+      .populate('subcategory', POPULATE_SUBCATEGORY)
+      .sort({ publishedAt: -1 })
+      .skip(skip)
+      .limit(limit),
+    Article.countDocuments(filter),
+  ]);
 
-  cache.set(PUBLIC_LIST_CACHE_KEY, articles, CACHE_TTL_MS);
-  res.json({ success: true, articles });
+  const payload = {
+    articles,
+    page,
+    totalPages: Math.max(1, Math.ceil(totalArticles / limit)),
+    totalArticles,
+  };
+
+  cache.set(cacheKey, payload, CACHE_TTL_MS);
+  res.json({ success: true, ...payload });
 });
 
 // @desc    Get single article (read more page) + related articles by same category
@@ -152,14 +178,17 @@ const createArticle = asyncHandler(async (req, res) => {
     res.status(400);
     throw new Error('Title is too long (max 200 characters)');
   }
-  if (summary.length > 500) {
+  // Summary is rich text (same editor/allowlist as content), so the limit is
+  // measured against the HTML - raised from the old 500 (plain-text) limit to
+  // leave room for formatting markup.
+  if (summary.length > 800) {
     res.status(400);
-    throw new Error('Summary is too long (max 500 characters)');
+    throw new Error('Summary is too long (max 800 characters, including formatting)');
   }
 
   const article = await Article.create({
     title,
-    summary,
+    summary: sanitizeArticleContent(summary),
     content: sanitizeArticleContent(content),
     featuredImage,
     author: req.user._id,
@@ -175,7 +204,7 @@ const createArticle = asyncHandler(async (req, res) => {
     { path: 'subcategory', select: POPULATE_SUBCATEGORY },
   ]);
 
-  cache.del(PUBLIC_LIST_CACHE_KEY);
+  cache.del(PUBLIC_LIST_CACHE_PREFIX, { prefix: true });
   res.status(201).json({ success: true, article: populated });
 });
 
@@ -196,7 +225,13 @@ const updateArticle = asyncHandler(async (req, res) => {
 
   const { title, summary, content, featuredImage, publishedAt, category, subcategory, status } = req.body;
   if (title !== undefined) article.title = title;
-  if (summary !== undefined) article.summary = summary;
+  if (summary !== undefined) {
+    if (summary.length > 800) {
+      res.status(400);
+      throw new Error('Summary is too long (max 800 characters, including formatting)');
+    }
+    article.summary = sanitizeArticleContent(summary);
+  }
   if (content !== undefined) article.content = sanitizeArticleContent(content);
   if (featuredImage !== undefined) article.featuredImage = featuredImage;
   if (publishedAt !== undefined) article.publishedAt = publishedAt;
@@ -214,7 +249,7 @@ const updateArticle = asyncHandler(async (req, res) => {
     { path: 'subcategory', select: POPULATE_SUBCATEGORY },
   ]);
 
-  cache.del(PUBLIC_LIST_CACHE_KEY);
+  cache.del(PUBLIC_LIST_CACHE_PREFIX, { prefix: true });
   cache.del(`${SINGLE_ARTICLE_CACHE_PREFIX}${article._id}`);
   cache.del(FEATURED_CACHE_KEY);
   res.json({ success: true, article: populated });
@@ -236,7 +271,7 @@ const deleteArticle = asyncHandler(async (req, res) => {
   }
 
   await article.deleteOne();
-  cache.del(PUBLIC_LIST_CACHE_KEY);
+  cache.del(PUBLIC_LIST_CACHE_PREFIX, { prefix: true });
   cache.del(`${SINGLE_ARTICLE_CACHE_PREFIX}${article._id}`);
   cache.del(FEATURED_CACHE_KEY);
   res.json({ success: true, message: 'Article deleted' });

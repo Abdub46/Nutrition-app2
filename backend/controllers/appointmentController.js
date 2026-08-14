@@ -63,16 +63,39 @@ const getMyAppointments = asyncHandler(async (req, res) => {
   res.json({ success: true, appointments });
 });
 
-// @desc    Get all appointments (admin)
-// @route   GET /api/appointments
+const DEFAULT_APPOINTMENTS_PAGE_SIZE = 20;
+const MAX_APPOINTMENTS_PAGE_SIZE = 100;
+
+// @desc    Get all appointments (admin), paginated, optionally filtered by status
+// @route   GET /api/appointments?status=&page=&limit=
 // @access  Private (admin)
 const getAllAppointments = asyncHandler(async (req, res) => {
   const { status } = req.query;
   const filter = status ? { status } : {};
-  const appointments = await Appointment.find(filter)
-    .populate('user', 'fullName email phone')
-    .sort({ createdAt: -1 });
-  res.json({ success: true, appointments });
+
+  const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+  const limit = Math.min(
+    MAX_APPOINTMENTS_PAGE_SIZE,
+    Math.max(1, parseInt(req.query.limit, 10) || DEFAULT_APPOINTMENTS_PAGE_SIZE)
+  );
+  const skip = (page - 1) * limit;
+
+  const [appointments, totalAppointments] = await Promise.all([
+    Appointment.find(filter)
+      .populate('user', 'fullName email phone')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit),
+    Appointment.countDocuments(filter),
+  ]);
+
+  res.json({
+    success: true,
+    appointments,
+    page,
+    totalPages: Math.max(1, Math.ceil(totalAppointments / limit)),
+    totalAppointments,
+  });
 });
 
 // @desc    Update appointment status (admin)

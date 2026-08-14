@@ -10,6 +10,7 @@ const {
   updateArticle,
   deleteArticle,
 } = require('../controllers/articleController');
+const { getArticleComments, addComment } = require('../controllers/commentController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
 const router = express.Router();
@@ -28,5 +29,12 @@ router.put('/:id', protect, authorize('admin', 'writer'), updateArticle);
 // create/update endpoints above - a writer can author an article but can't feature it.
 router.put('/:id/feature', protect, authorize('admin'), setFeaturedArticle);
 router.delete('/:id', protect, authorize('admin', 'writer'), deleteArticle);
+
+// Comments - nested under the article they belong to (matches the frontend's
+// /articles/:id/comments calls in services/commentApi.js). Deleting a single
+// comment lives at DELETE /api/comments/:id instead (see routes/commentRoutes.js),
+// since at that point it's no longer scoped to a particular article.
+router.get('/:id/comments', getArticleComments);
+router.post('/:id/comments', protect, addComment);
 
 module.exports = router;
