@@ -3,12 +3,14 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
+const cookieParser = require('cookie-parser');
 const mongoSanitize = require('express-mongo-sanitize');
 const connectDB = require('./config/db');
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 const { apiLimiter } = require('./middleware/rateLimitMiddleware');
 const { startKeepAlive } = require('./services/keepAliveService');
 const { getHealth } = require('./controllers/healthController');
+const { getSitemap } = require('./controllers/sitemapController');
 
 const authRoutes = require('./routes/authRoutes');
 const bmiRoutes = require('./routes/bmiRoutes');
@@ -32,6 +34,15 @@ connectDB();
 
 const app = express();
 
+// Trust the first hop only (Render's reverse proxy sits directly in front of
+// this process). Without this, req.ip reflects the proxy's own address
+// instead of the real client - rate limiting (see middleware/rateLimitMiddleware.js)
+// would then key off one shared IP for all traffic, and any X-Forwarded-For
+// header a client sends could be trusted blindly. "1" means "trust exactly
+// one proxy hop" - safer than "true", which would trust an arbitrary chain
+// and let a client spoof its own IP by setting X-Forwarded-For itself.
+app.set('trust proxy', 1);
+
 // Security & parsing middleware
 app.use(helmet());
 app.use(
@@ -42,6 +53,7 @@ app.use(
 );
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 app.use(mongoSanitize()); // strips any $ or . operators from req.body/query/params - blocks NoSQL injection
 if (process.env.NODE_ENV !== 'production') {
   app.use(morgan('dev'));
@@ -50,6 +62,9 @@ app.use('/api', apiLimiter);
 
 // Health check - see controllers/healthController.js for what it actually verifies
 app.get('/api/health', getHealth);
+
+// XML sitemap - see controllers/sitemapController.js for what's included and why
+app.get('/sitemap.xml', getSitemap);
 
 // Routes
 app.use('/api/auth', authRoutes);

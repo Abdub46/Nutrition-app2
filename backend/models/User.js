@@ -77,6 +77,25 @@ const userSchema = new mongoose.Schema(
     // name/email) until the client finishes the "complete your profile" form.
     // Always true for password signups, which collect everything up front.
     profileComplete: { type: Boolean, default: true },
+    // True once we have real proof this account's email belongs to whoever is
+    // using it - either a successful Google sign-in (Google verifies email
+    // ownership as part of OAuth) or a completed "forgot password" reset (proves
+    // they control the inbox). False for a fresh password signup, since nothing
+    // there actually confirms the email was theirs to begin with. See
+    // controllers/authController.js googleAuth() for why this matters: without
+    // it, someone could register a victim's email locally before the victim
+    // does, then get auto-logged into that same account the first time the
+    // victim uses "Continue with Google".
+    isEmailVerified: { type: Boolean, default: false },
+    // Bumped on logout and on any password change/reset - every JWT carries
+    // the tokenVersion it was issued with (see utils/generateToken.js), and
+    // middleware/authMiddleware.js rejects a token whose version doesn't
+    // match the user's current one. This is what actually revokes a token
+    // server-side; without it, logging out or changing a password only ever
+    // removed the token client-side, and a copy of it (stolen via XSS, or
+    // just left in an old device) would keep working until it expired on
+    // its own, up to 30 days later.
+    tokenVersion: { type: Number, default: 0 },
 
     // Role-based access control
     role: { type: String, enum: ['client', 'admin', 'writer'], default: 'client' },

@@ -8,6 +8,7 @@ const { calculateBMI, getBMICategory } = require('../utils/bmiUtils');
 const { isValidKenyanPhone, isDOBValid, isHeightValid, isWeightValid } = require('../utils/validators');
 const { isStrongPassword, STRONG_PASSWORD_MESSAGE } = require('../utils/passwordValidator');
 const { sendEmail } = require('../services/emailService');
+const { setAuthCookie, clearAuthCookie } = require('../utils/authCookie');
 
 // Reused across requests - verifyIdToken() itself is stateless/per-call, this just
 // avoids re-reading process.env.GOOGLE_CLIENT_ID on every login.
@@ -123,6 +124,10 @@ const signup = asyncHandler(async (req, res) => {
     drugUse: !!drugUse,
     drugUseDetails: drugUse ? drugUseDetails : '',
     role: 'client',
+    // No verification flow exists for password signups - this account's real
+    // owner is unconfirmed until they prove it via Google sign-in or a
+    // password-reset email (see models/User.js for why that matters).
+    isEmailVerified: false,
   });
 
   // Create the first BMI record so trend history starts at signup
@@ -135,9 +140,11 @@ const signup = asyncHandler(async (req, res) => {
     category: getBMICategory(bmi),
   });
 
+  const token = generateToken(user._id, user.tokenVersion);
+  setAuthCookie(res, token);
+
   res.status(201).json({
     success: true,
-    token: generateToken(user._id, user.role),
     user: sanitizeUser(user),
   });
 });
@@ -167,9 +174,11 @@ const login = asyncHandler(async (req, res) => {
   user.lastLogin = new Date();
   await user.save({ validateBeforeSave: false });
 
+  const token = generateToken(user._id, user.tokenVersion);
+  setAuthCookie(res, token);
+
   res.json({
     success: true,
-    token: generateToken(user._id, user.role),
     user: sanitizeUser(user),
   });
 });
@@ -207,17 +216,40 @@ const googleAuth = asyncHandler(async (req, res) => {
 
   const email = payload.email.toLowerCase();
   let user = await User.findOne({ googleId: payload.sub });
+  let accountReclaimed = false;
 
   if (!user) {
     user = await User.findOne({ email });
 
     if (user) {
+      if (!user.isEmailVerified) {
+        // SECURITY: this account's email was never actually confirmed as
+        // belonging to whoever set it up (e.g. it could have been registered
+        // by someone else using this person's email address before they ever
+        // signed up themselves - "account pre-hijacking"). Google just proved,
+        // via OAuth, that the person signing in right now genuinely owns this
+        // email - which is stronger proof than an unverified local password
+        // ever gave us. So we treat this as the real owner reclaiming the
+        // account: invalidate whatever password is currently set (nobody
+        // will know this random value) so a squatter's password stops
+        // working immediately, and mark the email verified going forward.
+        // The real owner can still set a new local password anytime via
+        // "Forgot password".
+        user.password = crypto.randomBytes(32).toString('hex');
+        user.isEmailVerified = true;
+        // Also revoke any token issued to whoever controlled this account
+        // before - otherwise a squatter's still-valid token would keep
+        // working even after losing the password above.
+        user.tokenVersion += 1;
+        accountReclaimed = true;
+      }
+
       // Account already exists (e.g. originally signed up with a password) -
       // link Google as an additional login method. Google has already verified
       // this email address, so this link is safe to make automatically.
       user.googleId = payload.sub;
       if (!user.avatar && payload.picture) user.avatar = payload.picture;
-      await user.save({ validateBeforeSave: false });
+      await user.save();
     } else {
       // Brand new account. Google only gives us name/email/picture, so the rest
       // of the nutrition profile is collected afterwards via completeProfile().
@@ -229,6 +261,7 @@ const googleAuth = asyncHandler(async (req, res) => {
         avatar: payload.picture || '',
         role: 'client',
         profileComplete: false,
+        isEmailVerified: true, // Google just verified it as part of this OAuth exchange
       });
     }
   }
@@ -241,10 +274,13 @@ const googleAuth = asyncHandler(async (req, res) => {
   user.lastLogin = new Date();
   await user.save({ validateBeforeSave: false });
 
+  const token = generateToken(user._id, user.tokenVersion);
+  setAuthCookie(res, token);
+
   res.json({
     success: true,
-    token: generateToken(user._id, user.role),
     user: sanitizeUser(user),
+    accountReclaimed,
   });
 });
 
@@ -253,6 +289,29 @@ const googleAuth = asyncHandler(async (req, res) => {
 // @access  Private
 const getMe = asyncHandler(async (req, res) => {
   res.json({ success: true, user: sanitizeUser(req.user) });
+});
+
+// @desc    Clear the auth cookie and revoke the token that was in it. The
+//          token itself is httpOnly, so client-side JS can't delete it
+//          directly - this is the only way to actually log out.
+// @route   POST /api/auth/logout
+// @access  Private (needs a valid token to know whose session to revoke)
+const logout = asyncHandler(async (req, res) => {
+  // Bumping tokenVersion invalidates this token immediately, server-side -
+  // without it, "logout" only ever removed the cookie client-side, and a
+  // copy of the token (stolen via XSS, or just sitting on an old device)
+  // would keep working until it expired on its own, up to 30 days later.
+  //
+  // Note: since there's only one tokenVersion per account (not one per
+  // device/session), this logs the account out everywhere, not just this
+  // browser - a deliberate simplicity trade-off given the app doesn't track
+  // individual sessions. Worth revisiting if multi-device "log out this
+  // device only" ever becomes a requirement.
+  req.user.tokenVersion += 1;
+  await req.user.save({ validateBeforeSave: false });
+
+  clearAuthCookie(res);
+  res.json({ success: true });
 });
 
 // @desc    Fill in the nutrition profile fields Google sign-up doesn't collect
@@ -426,11 +485,20 @@ const resetPassword = asyncHandler(async (req, res) => {
   user.password = password;
   user.resetPasswordToken = undefined;
   user.resetPasswordExpires = undefined;
+  // Completing a reset via the emailed token proves they control this inbox -
+  // same reasoning as the Google sign-in case in googleAuth() above.
+  user.isEmailVerified = true;
+  // Revoke any previously issued token (including a possibly stolen one) -
+  // the fresh token generated right below carries the new tokenVersion, so
+  // this session stays logged in while every other one is kicked out.
+  user.tokenVersion += 1;
   await user.save();
+
+  const token = generateToken(user._id, user.tokenVersion);
+  setAuthCookie(res, token);
 
   res.json({
     success: true,
-    token: generateToken(user._id, user.role),
     message: 'Password has been reset successfully',
   });
 });
@@ -444,4 +512,4 @@ const sanitizeUser = (user) => {
   return obj;
 };
 
-module.exports = { signup, login, googleAuth, getMe, completeProfile, forgotPassword, resetPassword };
+module.exports = { signup, login, googleAuth, getMe, logout, completeProfile, forgotPassword, resetPassword };

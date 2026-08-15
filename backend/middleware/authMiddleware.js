@@ -1,5 +1,3 @@
-
-
 const jwt = require('jsonwebtoken');
 const asyncHandler = require('express-async-handler');
 const User = require('../models/User');
@@ -8,10 +6,12 @@ const User = require('../models/User');
 const protect = asyncHandler(async (req, res, next) => {
   let token;
 
-  if (
-    req.headers.authorization &&
-    req.headers.authorization.startsWith('Bearer ')
-  ) {
+  // Cookie first (how the browser-based frontend authenticates now - see
+  // utils/authCookie.js), falling back to a Bearer header for any non-browser
+  // client (Postman, a future mobile app, etc.) that can't rely on cookies.
+  if (req.cookies?.token) {
+    token = req.cookies.token;
+  } else if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
     token = req.headers.authorization.split(' ')[1];
   }
 
@@ -41,6 +41,16 @@ const protect = asyncHandler(async (req, res, next) => {
     throw new Error(
       'This account has been deactivated. Please contact an administrator.'
     );
+  }
+
+  // Revocation check: logout and any password change/reset bump tokenVersion
+  // (see models/User.js) - a token issued before that no longer matches and
+  // is rejected here, even though it's still cryptographically valid and
+  // unexpired. This is what makes "logout" and "change password" actually
+  // invalidate the token, instead of just removing it client-side.
+  if (user.tokenVersion !== decoded.tokenVersion) {
+    res.status(401);
+    throw new Error('Not authorized, session has been revoked');
   }
 
   req.user = user;
