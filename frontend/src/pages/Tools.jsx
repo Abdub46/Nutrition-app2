@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import toast from 'react-hot-toast';
 import api from '../services/api';
+import Seo from '../components/Seo';
 
 const TOOL_OPTIONS = [
   { value: 'bmi', label: 'BMI Calculator (temporary)' },
@@ -13,6 +14,11 @@ const Tools = () => {
 
   return (
     <div className="pt-4 space-y-6 max-w-lg">
+      <Seo
+        title="Free Nutrition Calculators"
+        path="/tools"
+        description="Free BMI, daily water intake, and daily calorie requirement calculators - no account needed."
+      />
       <div>
         <h1 className="text-2xl font-bold text-gray-800">General Calculator</h1>
         <p className="text-sm text-gray-500">Quick calculators — results here are not saved to your profile</p>

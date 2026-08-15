@@ -68,7 +68,12 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('user', JSON.stringify(data.user));
     setUser(data.user);
 
-    return data.user;
+    // accountReclaimed: true means this email already had a local
+    // password-based account that had never been verified - the backend
+    // invalidated its old password as part of this Google sign-in (see
+    // backend/controllers/authController.js googleAuth() for why). Callers
+    // should tell the person about this rather than silently logging them in.
+    return { user: data.user, accountReclaimed: !!data.accountReclaimed };
   };
 
   const signup = async (payload) => {

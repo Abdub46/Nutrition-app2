@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import PasswordInput from '../components/PasswordInput';
 import GoogleSignInButton from '../components/GoogleSignInButton';
+import Seo from '../components/Seo';
 
 const FREQUENCY_OPTIONS = [
   'Once per week',
@@ -59,12 +60,21 @@ const Signup = () => {
   const handleGoogleCredential = async (credential) => {
     setGoogleLoading(true);
     try {
-      const user = await loginWithGoogle(credential);
-      if (!user.profileComplete) {
+      const { user, accountReclaimed } = await loginWithGoogle(credential);
+      if (accountReclaimed) {
+        toast.success(
+          "This email already had an account, so for your security we've reset its password - use Google to sign in from now on, or set a new password via 'Forgot password'.",
+          { duration: 8000 }
+        );
+      } else if (!user.profileComplete) {
         toast.success('Account created! Just a few more details.');
-        navigate('/complete-profile');
       } else {
         toast.success('Welcome back!');
+      }
+
+      if (!user.profileComplete) {
+        navigate('/complete-profile');
+      } else {
         navigate(user.role === 'writer' ? '/admin/articles' : '/');
       }
     } catch (err) {
@@ -146,6 +156,11 @@ const Signup = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 to-blue-50 py-8 px-4">
+      <Seo
+        title="Sign Up"
+        path="/signup"
+        description="Create your free Horizon+ account for personalized nutrition guidance, BMI tracking, and counselling."
+      />
       <div className="card w-full max-w-2xl mx-auto">
         <h1 className="text-2xl font-bold text-gray-800 mb-1">Create Your Account</h1>
         <p className="text-sm text-gray-500 mb-4">Step {step + 1} of {STEP_TITLES.length}: {STEP_TITLES[step]}</p>

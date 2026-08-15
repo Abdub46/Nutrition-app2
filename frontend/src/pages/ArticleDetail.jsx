@@ -7,6 +7,9 @@ import { useSettings } from '../context/SettingsContext';
 import RelatedPosts from '../components/articles/RelatedPosts';
 import ArticleSidebar from '../components/articles/ArticleSidebar';
 import Comments from '../components/articles/Comments';
+import Seo from '../components/Seo';
+import { stripHtml } from '../utils/stripHtml';
+import { shortName } from '../utils/shortName';
 
 const ArticleDetail = () => {
   const { id } = useParams();
@@ -33,6 +36,17 @@ const ArticleDetail = () => {
 
   return (
     <div className="pt-4 grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-10 items-start">
+      {/* noIndex: this page requires login, so it isn't crawlable anyway (also
+          disallowed in robots.txt) - these tags exist purely so a shared link
+          gets a proper title/image/description preview on WhatsApp, etc. */}
+      <Seo
+        title={article.title}
+        path={`/articles/${article._id}`}
+        description={stripHtml(article.summary).slice(0, 160)}
+        image={article.featuredImage || undefined}
+        type="article"
+        noIndex
+      />
       {/* Main article column */}
       <div className="space-y-5 min-w-0">
         <Link to="/articles" className="inline-flex items-center gap-1 text-sm text-primary-600 hover:underline">
@@ -61,7 +75,7 @@ const ArticleDetail = () => {
               </div>
             )}
             <div>
-              <p className="text-sm font-medium text-gray-700">{article.author.fullName}</p>
+              <p className="text-sm font-medium text-gray-700">{shortName(article.author.fullName)}</p>
               {article.author.bio && <p className="text-xs text-gray-400 line-clamp-1">{article.author.bio}</p>}
             </div>
           </div>

@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import Seo from '../components/Seo';
 import HomeNavbar from '../components/home/HomeNavbar';
 import HomeHero from '../components/home/HomeHero';
 import WhatWeDo from '../components/home/WhatWeDo';
@@ -17,6 +18,10 @@ const Home = () => {
 
   return (
     <div className="bg-white">
+      <Seo
+        path="/"
+        description="Horizon+ is a premium nutrition and wellness platform - personalized meal guidance, BMI tracking, an AI nutrition assistant, and one-on-one counselling."
+      />
       <HomeNavbar transparentOnTop />
       <HomeHero />
       <WhatWeDo />

@@ -24,10 +24,12 @@ const ResetPassword = () => {
     }
     setLoading(true);
     try {
-      const { data } = await api.put(`/auth/reset-password/${token}`, { password });
-      localStorage.setItem('token', data.token);
+      await api.put(`/auth/reset-password/${token}`, { password });
+      // The backend logs them in automatically (sets an httpOnly cookie) as
+      // part of a successful reset, but this page's flow is "reset, then log
+      // in fresh" - clear that cookie so the message below stays accurate.
+      await api.post('/auth/logout').catch(() => {});
       toast.success('Password reset successfully. Please log in again.');
-      localStorage.removeItem('token');
       navigate('/login');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Reset failed. The link may have expired.');

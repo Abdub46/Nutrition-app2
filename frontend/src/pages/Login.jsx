@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import PasswordInput from '../components/PasswordInput';
 import GoogleSignInButton from '../components/GoogleSignInButton';
+import Seo from '../components/Seo';
 
 const routeAfterLogin = (user, navigate) => {
   if (!user.profileComplete) {
@@ -40,8 +41,15 @@ const Login = () => {
   const handleGoogleCredential = async (credential) => {
     setLoading(true);
     try {
-      const user = await loginWithGoogle(credential);
-      toast.success('Welcome back!');
+      const { user, accountReclaimed } = await loginWithGoogle(credential);
+      if (accountReclaimed) {
+        toast.success(
+          "Welcome back! This email already had an account, so for your security we've reset its password - use Google to sign in from now on, or set a new password via 'Forgot password'.",
+          { duration: 8000 }
+        );
+      } else {
+        toast.success('Welcome back!');
+      }
       routeAfterLogin(user, navigate);
     } catch (err) {
       toast.error(err.response?.data?.message || 'Google sign-in failed');
@@ -52,6 +60,7 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-blue-50 px-4">
+      <Seo title="Login" path="/login" description="Log in to your Horizon+ nutrition counselling account." />
       <div className="card w-full max-w-md">
         <h1 className="text-2xl font-bold text-gray-800 mb-1">Welcome Back</h1>
         <p className="text-sm text-gray-500 mb-6">Login to your nutrition counselling account</p>

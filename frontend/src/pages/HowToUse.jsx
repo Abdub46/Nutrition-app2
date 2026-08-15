@@ -10,6 +10,7 @@ import {
   Wrench,
   Lightbulb,
 } from 'lucide-react';
+import Seo from '../components/Seo';
 
 const STEPS = [
   {
@@ -73,6 +74,11 @@ const STEPS = [
 const HowToUse = () => {
   return (
     <div className="pt-4 max-w-3xl space-y-8">
+      <Seo
+        title="How to Use Horizon+"
+        path="/how-to-use"
+        description="A quick walkthrough of Horizon+ - from signing up to getting personalized nutrition guidance."
+      />
       <div>
         <h1 className="text-2xl font-bold text-gray-800">How to Use Horizon+</h1>
         <p className="text-sm text-gray-500 mt-1">

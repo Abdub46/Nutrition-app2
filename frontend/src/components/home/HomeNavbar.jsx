@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Search, Menu, X, MessageCircle, LogOut, LayoutDashboard, Users, PenSquare,
   CalendarCheck, FolderTree, Settings, UserPlus, BarChart3, ChevronDown, Newspaper, Star,
@@ -50,51 +50,79 @@ const SETTINGS_ITEMS = [
 // Desktop dropdown - trigger is a plain button (not a link), items live underneath.
 // Uses a CSS group-hover so no open/close state or outside-click handling is needed;
 // the invisible padding above the panel keeps the hover chain unbroken.
-const NavDropdown = ({ label, items, isSolid, onNavigate }) => (
-  <div className="relative group">
-    <button
-      type="button"
-      className={`flex items-center gap-1 text-sm font-medium transition-colors duration-300 ${
-        isSolid ? 'text-gray-700 hover:text-primary-900 dark:text-gray-300 dark:hover:text-white' : 'text-white/90 hover:text-white'
-      }`}
-    >
-      {label}
-      <ChevronDown size={14} className="transition-transform duration-200 group-hover:rotate-180" />
-    </button>
-    <div className="absolute left-1/2 -translate-x-1/2 top-full pt-3 hidden group-hover:block z-50">
-      <div className="bg-white rounded-xl shadow-lg border border-gray-100 py-2 w-56 dark:bg-gray-900 dark:border-gray-800">
-        {items.map((item) => (
+// currentPath drives the "you're on this page" highlighting: the trigger itself
+// lights up if the current page is one of its items, and that item gets its own
+// highlight inside the open panel.
+const NavDropdown = ({ label, items, isSolid, currentPath, onNavigate }) => {
+  const isItemActive = (path) => currentPath === path || currentPath.startsWith(`${path}/`);
+  const triggerActive = items.some((item) => isItemActive(item.to));
+
+  return (
+    <div className="relative group">
+      <button
+        type="button"
+        className={`flex items-center gap-1 text-sm transition-colors duration-300 ${
+          triggerActive
+            ? `font-semibold ${isSolid ? 'text-primary-900 dark:text-white' : 'text-white'}`
+            : `font-medium ${isSolid ? 'text-gray-700 hover:text-primary-900 dark:text-gray-300 dark:hover:text-white' : 'text-white/90 hover:text-white'}`
+        }`}
+      >
+        {label}
+        <ChevronDown size={14} className="transition-transform duration-200 group-hover:rotate-180" />
+      </button>
+      <div className="absolute left-1/2 -translate-x-1/2 top-full pt-3 hidden group-hover:block z-50">
+        <div className="bg-white rounded-xl shadow-lg border border-gray-100 py-2 w-56 dark:bg-gray-900 dark:border-gray-800">
+          {items.map((item) => {
+            const active = isItemActive(item.to);
+            return (
+              <Link
+                key={item.to}
+                to={item.to}
+                onClick={onNavigate}
+                className={`flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors ${
+                  active
+                    ? 'bg-primary-50 text-primary-900 font-semibold dark:bg-gray-800 dark:text-white'
+                    : 'text-gray-700 hover:bg-gray-50 hover:text-primary-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white'
+                }`}
+              >
+                <item.icon size={16} className={active ? 'text-primary-600 dark:text-primary-300' : 'text-gray-400'} />
+                {item.label}
+              </Link>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Mobile drawer section - a small uppercase label followed by its indented links.
+const MobileSection = ({ label, items, currentPath, onNavigate }) => {
+  const isItemActive = (path) => currentPath === path || currentPath.startsWith(`${path}/`);
+
+  return (
+    <div className="flex flex-col gap-3 mt-1">
+      <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">{label}</p>
+      {items.map((item) => {
+        const active = isItemActive(item.to);
+        return (
           <Link
             key={item.to}
             to={item.to}
             onClick={onNavigate}
-            className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary-900 transition-colors dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
+            className={`flex items-center gap-2 pl-1 text-base ${
+              active
+                ? 'font-semibold text-primary-900 dark:text-white'
+                : 'font-medium text-gray-700 hover:text-primary-900 dark:text-gray-300 dark:hover:text-white'
+            }`}
           >
-            <item.icon size={16} className="text-gray-400" />
-            {item.label}
+            <item.icon size={18} /> {item.label}
           </Link>
-        ))}
-      </div>
+        );
+      })}
     </div>
-  </div>
-);
-
-// Mobile drawer section - a small uppercase label followed by its indented links.
-const MobileSection = ({ label, items, onNavigate }) => (
-  <div className="flex flex-col gap-3 mt-1">
-    <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">{label}</p>
-    {items.map((item) => (
-      <Link
-        key={item.to}
-        to={item.to}
-        onClick={onNavigate}
-        className="flex items-center gap-2 pl-1 text-base font-medium text-gray-700 hover:text-primary-900 dark:text-gray-300 dark:hover:text-white"
-      >
-        <item.icon size={18} /> {item.label}
-      </Link>
-    ))}
-  </div>
-);
+  );
+};
 
 // transparentOnTop: true only on the public homepage, where the navbar starts
 // transparent over the hero image and turns solid on scroll. Every other page
@@ -103,6 +131,7 @@ const HomeNavbar = ({ transparentOnTop = false }) => {
   const { visible: bannerVisible } = useBanner();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const menuButtonRef = useRef(null);
@@ -110,6 +139,9 @@ const HomeNavbar = ({ transparentOnTop = false }) => {
   const [query, setQuery] = useState('');
 
   const isSolid = transparentOnTop ? scrolled : true;
+  // Exact match, or a "detail page" one level under it (e.g. /articles/64f...
+  // still counts as being on the /articles link).
+  const isActive = (path) => location.pathname === path || location.pathname.startsWith(`${path}/`);
 
   const handleLogout = () => {
     setMobileOpen(false);
@@ -191,37 +223,56 @@ const HomeNavbar = ({ transparentOnTop = false }) => {
 
         {/* Center nav - desktop */}
         <nav className="hidden lg:flex items-center gap-8">
-          {BASE_LINKS.map((link) => (
-            <Link
-              key={link.label}
-              to={link.to}
-              className={`relative text-sm font-medium transition-colors duration-300 pb-1 group ${
-                isSolid ? 'text-gray-700 hover:text-primary-900 dark:text-gray-300 dark:hover:text-white' : 'text-white/90 hover:text-white'
-              }`}
-            >
-              {link.label}
-              <span className="absolute left-0 -bottom-0.5 h-0.5 w-0 bg-accent-500 rounded-full transition-all duration-300 group-hover:w-full" />
-            </Link>
-          ))}
+          {BASE_LINKS.map((link) => {
+            const active = isActive(link.to);
+            return (
+              <Link
+                key={link.label}
+                to={link.to}
+                className={`relative text-sm transition-colors duration-300 pb-1 group ${
+                  active
+                    ? `font-semibold ${isSolid ? 'text-primary-900 dark:text-white' : 'text-white'}`
+                    : `font-medium ${
+                        isSolid ? 'text-gray-700 hover:text-primary-900 dark:text-gray-300 dark:hover:text-white' : 'text-white/90 hover:text-white'
+                      }`
+                }`}
+              >
+                {link.label}
+                <span
+                  className={`absolute left-0 -bottom-0.5 h-0.5 bg-accent-500 rounded-full transition-all duration-300 ${
+                    active ? 'w-full' : 'w-0 group-hover:w-full'
+                  }`}
+                />
+              </Link>
+            );
+          })}
 
-          {user && <NavDropdown label="My Portal" items={portalItems} isSolid={isSolid} />}
+          {user && <NavDropdown label="My Portal" items={portalItems} isSolid={isSolid} currentPath={location.pathname} />}
 
           {user?.role === 'writer' && (
             <Link
               to="/admin/articles"
-              className={`relative text-sm font-medium transition-colors duration-300 pb-1 group ${
-                isSolid ? 'text-gray-700 hover:text-primary-900 dark:text-gray-300 dark:hover:text-white' : 'text-white/90 hover:text-white'
+              className={`relative text-sm transition-colors duration-300 pb-1 group ${
+                isActive('/admin/articles')
+                  ? `font-semibold ${isSolid ? 'text-primary-900 dark:text-white' : 'text-white'}`
+                  : `font-medium ${
+                      isSolid ? 'text-gray-700 hover:text-primary-900 dark:text-gray-300 dark:hover:text-white' : 'text-white/90 hover:text-white'
+                    }`
               }`}
             >
               Add Article
-              <span className="absolute left-0 -bottom-0.5 h-0.5 w-0 bg-accent-500 rounded-full transition-all duration-300 group-hover:w-full" />
+              <span
+                className={`absolute left-0 -bottom-0.5 h-0.5 bg-accent-500 rounded-full transition-all duration-300 ${
+                  isActive('/admin/articles') ? 'w-full' : 'w-0 group-hover:w-full'
+                }`}
+              />
             </Link>
           )}
 
           {user?.role === 'admin' && (
             <>
-              <NavDropdown label="Admin Dashboard" items={ADMIN_DASHBOARD_ITEMS} isSolid={isSolid} />
-              <NavDropdown label="Settings" items={SETTINGS_ITEMS} isSolid={isSolid} />
+              <NavDropdown label="Admin Dashboard" items={ADMIN_DASHBOARD_ITEMS} isSolid={isSolid} currentPath={location.pathname} />
+              <NavDropdown label="Settings" items={SETTINGS_ITEMS} isSolid={isSolid} currentPath={location.pathname} />
             </>
           )}
         </nav>
@@ -326,7 +377,11 @@ const HomeNavbar = ({ transparentOnTop = false }) => {
                   key={link.label}
                   to={link.to}
                   onClick={closeMobile}
-                  className="text-base font-medium text-gray-700 hover:text-primary-900 dark:text-gray-300 dark:hover:text-white"
+                  className={`text-base ${
+                    isActive(link.to)
+                      ? 'font-semibold text-primary-900 dark:text-white'
+                      : 'font-medium text-gray-700 hover:text-primary-900 dark:text-gray-300 dark:hover:text-white'
+                  }`}
                 >
                   {link.label}
                 </Link>
@@ -335,13 +390,17 @@ const HomeNavbar = ({ transparentOnTop = false }) => {
               {user && (
                 <>
                   <div className="border-t border-gray-100 my-1 dark:border-gray-800" />
-                  <MobileSection label="My Portal" items={portalItems} onNavigate={closeMobile} />
+                  <MobileSection label="My Portal" items={portalItems} currentPath={location.pathname} onNavigate={closeMobile} />
 
                   {user.role === 'writer' && (
                     <Link
                       to="/admin/articles"
                       onClick={closeMobile}
-                      className="flex items-center gap-2 text-base font-medium text-gray-700 hover:text-primary-900 mt-1 dark:text-gray-300 dark:hover:text-white"
+                      className={`flex items-center gap-2 text-base mt-1 ${
+                        isActive('/admin/articles')
+                          ? 'font-semibold text-primary-900 dark:text-white'
+                          : 'font-medium text-gray-700 hover:text-primary-900 dark:text-gray-300 dark:hover:text-white'
+                      }`}
                     >
                       <PenSquare size={18} /> Add Article
                     </Link>
@@ -349,8 +408,8 @@ const HomeNavbar = ({ transparentOnTop = false }) => {
 
                   {user.role === 'admin' && (
                     <>
-                      <MobileSection label="Admin Dashboard" items={ADMIN_DASHBOARD_ITEMS} onNavigate={closeMobile} />
-                      <MobileSection label="Settings" items={SETTINGS_ITEMS} onNavigate={closeMobile} />
+                      <MobileSection label="Admin Dashboard" items={ADMIN_DASHBOARD_ITEMS} currentPath={location.pathname} onNavigate={closeMobile} />
+                      <MobileSection label="Settings" items={SETTINGS_ITEMS} currentPath={location.pathname} onNavigate={closeMobile} />
                     </>
                   )}
 

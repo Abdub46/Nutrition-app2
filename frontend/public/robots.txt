@@ -1,0 +1,21 @@
+User-agent: *
+Allow: /
+Allow: /login
+Allow: /signup
+Allow: /tools
+Allow: /how-to-use
+
+# Everything below requires a login (ProtectedRoute/AdminRoute in the app) -
+# a crawler can't get past that anyway, so there's no point letting it try.
+Disallow: /dashboard
+Disallow: /bmi-calculator
+Disallow: /chatbot
+Disallow: /appointments
+Disallow: /articles
+Disallow: /suggest-improvement
+Disallow: /complete-profile
+Disallow: /admin
+
+# Update this to your deployed backend's public URL once you know it -
+# see backend/controllers/sitemapController.js (uses the CLIENT_URL env var).
+Sitemap: https://your-api-domain.example.com/sitemap.xml
