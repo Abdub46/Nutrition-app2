@@ -16,10 +16,12 @@ const QUICK_LINKS = [
 
 const POPULAR_TOPICS = [
   'Healthy Eating',
-  'Disease Prevention',
+  'Food Safety',
   'Weight Management',
-  'Family Nutrition',
-  "Women's Health",
+  'Maternal Nutrition',
+  'Sports Nutrition',
+  'Clinical Nutrition',
+  "Nutrition Myths",
 ];
 
 const SOCIALS = [Facebook, Instagram, Twitter, Linkedin, Youtube];
