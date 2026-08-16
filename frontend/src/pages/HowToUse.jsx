@@ -73,7 +73,7 @@ const STEPS = [
 
 const HowToUse = () => {
   return (
-    <div className="pt-4 max-w-3xl space-y-8">
+    <div className="pt-4 max-w-3xl mx-auto space-y-8">
       <Seo
         title="How to Use Horizon+"
         path="/how-to-use"

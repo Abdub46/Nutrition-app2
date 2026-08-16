@@ -28,7 +28,7 @@ const SuggestImprovement = () => {
   };
 
   return (
-    <div className="pt-4 max-w-lg space-y-6">
+    <div className="pt-4 max-w-lg mx-auto space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-800">Suggest an Improvement</h1>
         <p className="text-sm text-gray-500">Have an idea for how we can make the app better? Let us know below.</p>

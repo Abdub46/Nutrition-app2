@@ -26,6 +26,9 @@ import Tools from './pages/Tools';
 import Home from './pages/Home';
 import SuggestImprovement from './pages/SuggestImprovement';
 import HowToUse from './pages/HowToUse';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsOfService from './pages/TermsOfService';
+import CookiePolicy from './pages/CookiePolicy';
 
 import AdminHome from './pages/admin/AdminHome';
 import AdminUsers from './pages/admin/AdminUsers';
@@ -78,6 +81,9 @@ function App() {
         {/* Public content page - visible before login/signup too */}
         <Route path="/tools" element={withLayout(Tools)} />
         <Route path="/how-to-use" element={withLayout(HowToUse)} />
+        <Route path="/privacy-policy" element={withLayout(PrivacyPolicy)} />
+        <Route path="/terms-of-service" element={withLayout(TermsOfService)} />
+        <Route path="/cookie-policy" element={withLayout(CookiePolicy)} />
 
         {/* Client routes */}
         <Route path="/dashboard" element={<ProtectedRoute>{withLayout(Dashboard)}</ProtectedRoute>} />
