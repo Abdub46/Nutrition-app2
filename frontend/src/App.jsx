@@ -4,6 +4,7 @@ import { Toaster } from 'react-hot-toast';
 import TopBanner from './components/TopBanner';
 import NetworkStatus from './components/NetworkStatus';
 import PageViewTracker from './components/PageViewTracker';
+import ScrollToTop from './components/ScrollToTop';
 
 import { useAuth } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -62,6 +63,7 @@ function App() {
       <TopBanner />
       <NetworkStatus />
       <PageViewTracker />
+      <ScrollToTop />
       <Toaster position="top-right" toastOptions={{ duration: 3500 }} />
       <Routes>
         {/* Public homepage - client-facing only, no admin/writer branding or links */}
