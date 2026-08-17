@@ -1,6 +1,14 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Facebook, Twitter, Linkedin, Youtube, Send } from 'lucide-react';
+import {
+  Facebook,
+  MessageCircle,
+  Twitter,
+  Linkedin,
+  Youtube,
+  Send
+} from 'lucide-react';
+
 import { FaWhatsapp } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import { subscribeNewsletter } from '../../services/newsletterApi';
@@ -27,7 +35,7 @@ const POPULAR_TOPICS = [
   "Women's Health",
 ];
 
-const SOCIALS = [Facebook, Whatsapp, Twitter, Linkedin, Youtube];
+const SOCIALS = [Facebook, MessageCircle, Twitter, Linkedin, Youtube];
 
 const HomeFooter = () => {
   const [email, setEmail] = useState('');

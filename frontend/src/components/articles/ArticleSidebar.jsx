@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Facebook, Whatsapp, Linkedin, Twitter, MessageCircle } from 'lucide-react';
+import { Search, Facebook, Linkedin, Twitter, MessageCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { subscribeNewsletter } from '../../services/newsletterApi';
 import { stripHtml } from '../../utils/stripHtml';
@@ -91,7 +91,7 @@ const ArticleSidebar = ({
             </a>
           )}
           {socialLinks.whatsapp && (
-            <a href={socialLinks.whatsapp} target="_blank" rel="noreferrer" className="text-gray-400 hover:text-primary-600" aria-label="Whatsapp">
+            <a href={socialLinks.whatsapp} target="_blank" rel="noreferrer" className="text-gray-400 hover:text-primary-600" aria-label="WhatsApp">
               <MessageCircle size={17} />
             </a>
           )}
