@@ -13,7 +13,7 @@ const Tools = () => {
   const [tool, setTool] = useState('bmi');
 
   return (
-    <div className="pt-4 space-y-6 max-w-lg">
+    <div className="pt-4 space-y-6 max-w-lg mx-auto">
       <Seo
         title="Free Nutrition Calculators"
         path="/tools"
