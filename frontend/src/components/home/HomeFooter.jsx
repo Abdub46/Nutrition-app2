@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Facebook, Whatsapp, Twitter, Linkedin, Youtube, Send } from 'lucide-react';
+import { Facebook, Twitter, Linkedin, Youtube, Send } from 'lucide-react';
+import { FaWhatsapp } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import { subscribeNewsletter } from '../../services/newsletterApi';
 
