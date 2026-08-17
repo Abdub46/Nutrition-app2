@@ -25,12 +25,14 @@ const ResetPassword = () => {
     setLoading(true);
     try {
       await api.put(`/auth/reset-password/${token}`, { password });
-      // The backend logs them in automatically (sets an httpOnly cookie) as
-      // part of a successful reset, but this page's flow is "reset, then log
-      // in fresh" - clear that cookie so the message below stays accurate.
-      await api.post('/auth/logout').catch(() => {});
-      toast.success('Password reset successfully. Please log in again.');
-      navigate('/login');
+      // A successful reset already logs them in (the backend sets a fresh
+      // session cookie as part of that response) - send them into the app
+      // instead of a login page they don't need. Deliberately not chaining
+      // any other authenticated request here: if one ever failed, the global
+      // 401 handler in services/api.js does a hard redirect that would tear
+      // down this page mid-flow, before the success message even shows.
+      toast.success('Password reset successfully. You are now logged in.');
+      navigate('/');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Reset failed. The link may have expired.');
     } finally {
