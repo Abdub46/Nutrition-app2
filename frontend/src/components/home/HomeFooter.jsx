@@ -26,7 +26,7 @@ const POPULAR_TOPICS = [
   "Women's Health",
 ];
 
-const SOCIALS = [Facebook, Instagram, Twitter, Linkedin, Youtube];
+const SOCIALS = [Facebook, Whatsapp, Twitter, Linkedin, Youtube];
 
 const HomeFooter = () => {
   const [email, setEmail] = useState('');
