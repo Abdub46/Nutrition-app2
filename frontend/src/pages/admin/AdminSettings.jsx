@@ -18,7 +18,7 @@ const TABS = [
 const emptyForm = {
   websiteName: '', websiteDescription: '', websiteLogo: '', websiteFavicon: '',
   contactEmail: '', contactPhone: '',
-  socialLinks: { facebook: '', instagram: '', twitter: '', linkedin: '', whatsapp: '' },
+  socialLinks: { facebook: '', Whatsapp: '', twitter: '', linkedin: '', whatsapp: '' },
   footerText: '',
   newsletterHeading: '', newsletterDescription: '',
   seoTitle: '', seoDescription: '',
@@ -179,7 +179,7 @@ const AdminSettings = () => {
               </div>
               <p className="label-text pt-2">Social Media Links</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {['facebook', 'instagram', 'twitter', 'linkedin', 'whatsapp'].map((key) => (
+                {['facebook', 'twitter', 'linkedin', 'whatsapp'].map((key) => (
                   <div key={key}>
                     <label className="label-text capitalize">{key}</label>
                     <input
