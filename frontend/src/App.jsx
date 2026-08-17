@@ -26,6 +26,7 @@ import ArticleDetail from './pages/ArticleDetail';
 import Tools from './pages/Tools';
 import Home from './pages/Home';
 import SuggestImprovement from './pages/SuggestImprovement';
+import RequestToBeWriter from './pages/RequestToBeWriter';
 import HowToUse from './pages/HowToUse';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
@@ -95,6 +96,7 @@ function App() {
         <Route path="/articles" element={<ProtectedRoute>{withLayout(Articles)}</ProtectedRoute>} />
         <Route path="/articles/:id" element={<ProtectedRoute>{withLayout(ArticleDetail)}</ProtectedRoute>} />
         <Route path="/suggest-improvement" element={<ProtectedRoute>{withLayout(SuggestImprovement)}</ProtectedRoute>} />
+        <Route path="/request-to-be-writer" element={<ProtectedRoute>{withLayout(RequestToBeWriter)}</ProtectedRoute>} />
 
         {/* Shared admin + writer routes - article management, ownership enforced server-side */}
         <Route path="/admin/articles" element={<RoleRoute roles={['admin', 'writer']}>{withLayout(AdminArticles)}</RoleRoute>} />

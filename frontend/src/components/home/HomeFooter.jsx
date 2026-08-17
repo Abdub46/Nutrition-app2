@@ -10,18 +10,17 @@ const QUICK_LINKS = [
   { label: 'BMI Calculator', to: '/bmi-calculator' },
   { label: 'Counselling', to: '/appointments' },
   { label: 'Suggest Improvement', to: '/suggest-improvement' },
+  { label: 'Request to be a Writer', to: '/request-to-be-writer' },
   { label: 'About', href: '#why-choose-us' },
   { label: 'Contact', href: '#footer' },
 ];
 
 const POPULAR_TOPICS = [
   'Healthy Eating',
-  'Food Safety',
+  'Disease Prevention',
   'Weight Management',
-  'Maternal Nutrition',
-  'Sports Nutrition',
-  'Clinical Nutrition',
-  "Nutrition Myths",
+  'Family Nutrition',
+  "Women's Health",
 ];
 
 const SOCIALS = [Facebook, Instagram, Twitter, Linkedin, Youtube];
