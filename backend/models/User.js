@@ -110,6 +110,14 @@ const userSchema = new mongoose.Schema(
       },
     },
 
+    // Self-service "Request to be a Writer" flow (see controllers/writerController.js
+    // submitWriterRequest/reviewWriterRequest). Unset for anyone who's never applied.
+    // Accepting sets role to 'writer'; rejecting (including revoking an existing
+    // writer) sets role back to 'client'. Admin-added writers (the older, separate
+    // "Add Writer" flow in AdminWriters.jsx) never set this - getWriters() treats
+    // any role:'writer' account with no writerRequestStatus as implicitly Accepted.
+    writerRequestStatus: { type: String, enum: ['Pending', 'Accepted', 'Rejected'] },
+
     // Writer/staff account lifecycle
     isActive: { type: Boolean, default: true },
     isDeleted: { type: Boolean, default: false }, // soft delete - preserves article authorship integrity

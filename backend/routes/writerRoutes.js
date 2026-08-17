@@ -1,6 +1,6 @@
 const express = require('express');
 const {
-  getWriters, checkWriterEmail, createWriter, updateWriter, toggleWriterStatus, deleteWriter,
+  getWriters, reviewWriterRequest, checkWriterEmail, createWriter, updateWriter, toggleWriterStatus, deleteWriter,
 } = require('../controllers/writerController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
@@ -13,6 +13,7 @@ router.get('/check-email', checkWriterEmail);
 router.post('/', createWriter);
 router.put('/:id', updateWriter);
 router.put('/:id/status', toggleWriterStatus);
+router.put('/:id/review', reviewWriterRequest);
 router.delete('/:id', deleteWriter);
 
 module.exports = router;

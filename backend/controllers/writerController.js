@@ -2,15 +2,19 @@ const asyncHandler = require('express-async-handler');
 const User = require('../models/User');
 const Article = require('../models/Article');
 
-// @desc    Get all writers with published article counts
+// @desc    Get all writers (accepted) plus any pending/rejected writer requests,
+//          so the admin can review and act on all three from one page
 // @route   GET /api/writers
 // @access  Private (admin)
 const getWriters = asyncHandler(async (req, res) => {
-  const writers = await User.find({ role: 'writer', isDeleted: false }).sort({ createdAt: -1 });
+  const writers = await User.find({
+    isDeleted: false,
+    $or: [{ role: 'writer' }, { writerRequestStatus: { $in: ['Pending', 'Rejected'] } }],
+  }).sort({ createdAt: -1 });
 
   const shaped = await Promise.all(
     writers.map(async (w) => {
-      const publishedCount = await Article.countDocuments({ author: w._id, status: 'Published' });
+      const publishedCount = w.role === 'writer' ? await Article.countDocuments({ author: w._id, status: 'Published' }) : 0;
       return {
         _id: w._id,
         fullName: w.fullName,
@@ -19,6 +23,9 @@ const getWriters = asyncHandler(async (req, res) => {
         bio: w.bio,
         qualification: w.qualification,
         isActive: w.isActive,
+        // Admin-added writers (the older direct-add flow below) never set
+        // writerRequestStatus - treat any actual writer without one as Accepted.
+        status: w.writerRequestStatus || (w.role === 'writer' ? 'Accepted' : 'Pending'),
         publishedArticleCount: publishedCount,
         createdAt: w.createdAt,
         lastLogin: w.lastLogin,
@@ -27,6 +34,108 @@ const getWriters = asyncHandler(async (req, res) => {
   );
 
   res.json({ success: true, writers: shaped });
+});
+
+// @desc    Submit a self-service request to become a writer - collects just a
+//          name and optional bio (the account's existing, already-verified
+//          email is used as-is). Shows up as "Pending" on the admin Writers
+//          page until reviewed.
+// @route   POST /api/writer-requests
+// @access  Private (any logged-in non-admin, non-writer account)
+const submitWriterRequest = asyncHandler(async (req, res) => {
+  const { fullName, bio, qualification } = req.body;
+
+  if (!fullName || !fullName.trim()) {
+    res.status(400);
+    throw new Error('Please provide your name');
+  }
+  if (!qualification || !['Nutritionist', 'Dietitian'].includes(qualification)) {
+    res.status(400);
+    throw new Error('Please select whether you are a Nutritionist or a Dietitian');
+  }
+  if (bio && bio.length > 500) {
+    res.status(400);
+    throw new Error('Bio is too long (max 500 characters)');
+  }
+
+  if (req.user.role === 'admin') {
+    res.status(400);
+    throw new Error('Admin accounts cannot request writer access');
+  }
+  if (req.user.role === 'writer') {
+    res.status(400);
+    throw new Error("You're already a writer");
+  }
+
+  req.user.fullName = fullName.trim();
+  req.user.bio = bio ? bio.trim() : '';
+  // Not yet enforced by the schema (qualification is only required once role
+  // becomes 'writer'), but stored now so the admin's accept step - see
+  // reviewWriterRequest() - can be pre-filled with what the applicant claimed,
+  // rather than starting blank.
+  req.user.qualification = qualification;
+  // Allows a previously rejected applicant to re-apply by submitting again.
+  req.user.writerRequestStatus = 'Pending';
+  await req.user.save();
+
+  res.status(201).json({
+    success: true,
+    message: 'Your request has been submitted for review.',
+    status: req.user.writerRequestStatus,
+  });
+});
+
+// @desc    Accept, reject, or reset a writer request/an existing writer's access.
+//          Accepting requires a qualification (same requirement as the direct-add
+//          flow below) and grants the 'writer' role; rejecting (including on an
+//          already-accepted writer, to revoke access) sets the role back to 'client'.
+// @route   PUT /api/writers/:id/review
+// @access  Private (admin)
+const reviewWriterRequest = asyncHandler(async (req, res) => {
+  const { status, qualification } = req.body;
+
+  if (!['Pending', 'Accepted', 'Rejected'].includes(status)) {
+    res.status(400);
+    throw new Error('Invalid status');
+  }
+
+  const user = await User.findOne({ _id: req.params.id, isDeleted: false });
+  if (!user || (!user.writerRequestStatus && user.role !== 'writer')) {
+    res.status(404);
+    throw new Error('Writer request not found');
+  }
+  if (user.role === 'admin') {
+    res.status(400);
+    throw new Error('Cannot change writer status for an admin account');
+  }
+
+  if (status === 'Accepted') {
+    if (!qualification || !['Nutritionist', 'Dietitian'].includes(qualification)) {
+      res.status(400);
+      throw new Error('Please specify whether this person is a Nutritionist or a Dietitian');
+    }
+    user.role = 'writer';
+    user.qualification = qualification;
+    user.isActive = true;
+    user.createdBy = req.user._id;
+  } else {
+    // Rejected or reset to Pending - neither should leave them with writer access.
+    user.role = 'client';
+  }
+  user.writerRequestStatus = status;
+
+  await user.save();
+
+  res.json({
+    success: true,
+    writer: {
+      _id: user._id,
+      fullName: user.fullName,
+      email: user.email,
+      qualification: user.qualification,
+      status: user.writerRequestStatus,
+    },
+  });
 });
 
 // @desc    Check whether an email belongs to an existing account before adding a writer,
@@ -182,4 +291,13 @@ const deleteWriter = asyncHandler(async (req, res) => {
   res.json({ success: true, message: 'Writer removed' });
 });
 
-module.exports = { getWriters, checkWriterEmail, createWriter, updateWriter, toggleWriterStatus, deleteWriter };
+module.exports = {
+  getWriters,
+  submitWriterRequest,
+  reviewWriterRequest,
+  checkWriterEmail,
+  createWriter,
+  updateWriter,
+  toggleWriterStatus,
+  deleteWriter,
+};
