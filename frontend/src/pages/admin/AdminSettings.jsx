@@ -18,7 +18,7 @@ const TABS = [
 const emptyForm = {
   websiteName: '', websiteDescription: '', websiteLogo: '', websiteFavicon: '',
   contactEmail: '', contactPhone: '',
-  socialLinks: { facebook: '', Whatsapp: '', twitter: '', linkedin: '', whatsapp: '' },
+  socialLinks: { facebook: '', twitter: '', linkedin: '', whatsapp: '' },
   footerText: '',
   newsletterHeading: '', newsletterDescription: '',
   seoTitle: '', seoDescription: '',

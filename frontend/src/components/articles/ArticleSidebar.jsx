@@ -90,8 +90,8 @@ const ArticleSidebar = ({
               <Facebook size={17} />
             </a>
           )}
-          {socialLinks.Whatsapp && (
-            <a href={socialLinks.Whatsapp} target="_blank" rel="noreferrer" className="text-gray-400 hover:text-primary-600" aria-label="Whatsapp">
+          {socialLinks.whatsapp && (
+            <a href={socialLinks.whatsapp} target="_blank" rel="noreferrer" className="text-gray-400 hover:text-primary-600" aria-label="Whatsapp">
               <Whatsapp size={17} />
             </a>
           )}
@@ -107,7 +107,7 @@ const ArticleSidebar = ({
           )}
           {socialLinks.whatsapp && (
             <a href={socialLinks.whatsapp} target="_blank" rel="noreferrer" className="text-gray-400 hover:text-primary-600" aria-label="WhatsApp">
-              <MessageCircle size={17} />
+              <Whatsapp size={17} />
             </a>
           )}
         </div>
