@@ -15,10 +15,10 @@ const siteSettingsSchema = new mongoose.Schema(
     // Social links
     socialLinks: {
       facebook: { type: String, default: '' },
-      instagram: { type: String, default: '' },
+      Whatsapp: { type: String, default: '' },
       twitter: { type: String, default: '' },
       linkedin: { type: String, default: '' },
-      whatsapp: { type: String, default: '' },
+      
     },
 
     // Footer
